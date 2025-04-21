@@ -15,4 +15,9 @@ class Author extends Model
         'lastname_2',
         'country',
     ];
+
+    public function books()
+    {
+        return $this->belongsToMany(Book::class);
+    }
 }

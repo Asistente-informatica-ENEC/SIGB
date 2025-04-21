@@ -1,0 +1,44 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Book extends Model
+{
+    use HasFactory;
+
+
+    protected $fillable = [
+        'title',
+        'type_code_id',
+        'book_code',
+        'publishing_house_id',
+        'publishing_year',
+        'edition',
+        'inventory_number',
+        'physic_location',
+        'themes',
+    ];
+
+    public function authors()
+    {
+        return $this->belongsToMany(Author::class);
+    }
+
+    public function genres()
+    {
+        return $this->belongsToMany(Genre::class);
+    }
+
+    public function publishingHouse()
+    {
+        return $this->belongsTo(Publishing_house::class);
+    }
+
+    public function typeCode()
+    {
+        return $this->belongsTo(TypeCode::class);
+    }
+}
