@@ -14,6 +14,7 @@ class Book extends Model
         'title',
         'type_code_id',
         'book_code',
+        'status',
         'publishing_house_id',
         'publishing_year',
         'edition',

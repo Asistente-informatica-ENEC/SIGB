@@ -20,4 +20,9 @@ class Author extends Model
     {
         return $this->belongsToMany(Book::class);
     }
+
+    public function getFullNameAttribute()
+    {
+        return "{$this->name} {$this->lastname}";
+    }
 }

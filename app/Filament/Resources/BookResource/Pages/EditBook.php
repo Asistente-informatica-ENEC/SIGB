@@ -16,4 +16,13 @@ class EditBook extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
+    protected function getCancelFormAction(): \Filament\Actions\Action
+    {
+        return \Filament\Actions\Action::make('cancel')
+            ->label('Regresar')
+            ->url($this->getResource()::getUrl());
+    }
+
+    
 }
