@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('title');
             $table->foreignId('type_code_id')->constrained()->onDelete('cascade');
             $table->string('book_code');
+            $table->string('status')->default('disponible');
             $table->foreignId('publishing_house_id')->constrained()->onDelete('cascade');
             $table->string('publishing_year');
             $table->string('edition');
