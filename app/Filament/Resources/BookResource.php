@@ -13,6 +13,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Illuminate\Support\Collection;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -61,14 +62,14 @@ class BookResource extends Resource
                     ->multiple()
                     ->preload()
                     ->searchable()
-                    ->relationship('genres', 'Género') // <- esto ya hace todo por ti
+                    ->relationship('genres', 'Género') 
                     ->required(),
                 TextInput::make('inventory_number')->label('Número de inventario')->required()->maxLength(255),
                 TextInput::make('physic_location')->label('Ubicación')->required()->maxLength(255),
                 Textarea::make('themes')
                 ->label('Temas')
-                ->maxLength(500)
-                ->rows(10) // opcional: define cuántas líneas se muestran
+                ->maxLength(1000)
+                ->rows(10)
                 ->columnSpan('full'),
 
             ]);
@@ -79,8 +80,20 @@ class BookResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('title')->label('Título')->searchable()->sortable(),
-                TextColumn::make('typeCode.name')->label('Tipo de Código')->searchable()->sortable(),
-                TextColumn::make('book_code')->label('código de recurso')->searchable()->sortable(),
+                TextColumn::make('codigo') // Nombre de la nueva columna combinada
+                ->label('Código')
+                ->getStateUsing(function ($record) {
+                    return $record->typeCode->name . '-' . $record->book_code;
+                })
+                ->searchable(query: function (Builder $query, string $search): Builder {
+                    return $query->whereHas('typeCode', function (Builder $query) use ($search) {
+                        $query->where('name', 'like', "%{$search}%");
+                    })->orWhere('book_code', 'like', "%{$search}%");
+                })
+                ->sortable(query: function (Builder $query, string $direction): Builder {
+                    return $query->orderBy('type_code_id', $direction)
+                        ->orderBy('book_code', $direction);
+                }),
                 BadgeColumn::make('status')->label('Estado')->formatStateUsing(fn (string $state): string => match ($state) {
                     'disponible' => 'Disponible',
                     'prestado' => 'Prestado',
@@ -95,7 +108,7 @@ class BookResource extends Resource
                         'gray' => 'retirado',
                     ]),
                     TextColumn::make('authors')
-                    ->label('Autor/es')
+                    ->label('Autor/es')->limit(25)
                     ->getStateUsing(function ($record) {
                         return $record->authors
                             ->map(fn ($author) => $author->name . ' ' . $author->lastname_1)
@@ -116,7 +129,7 @@ class BookResource extends Resource
                 ->badge()
                 ->separator(', '),
                 TextColumn::make('inventory_number')->label('Número de inventario')->searchable()->sortable(),
-                TextColumn::make('physic_location')->label('Ubicación')->searchable()->sortable(),
+                TextColumn::make('physic_location')->label('Ubicación')->limit(50)->searchable()->sortable(),
                 TextColumn::make('themes')->label('Temas')->limit(25)
                 ->tooltip(fn ($record) => $record->themes)->searchable()->sortable(),
 
@@ -125,16 +138,31 @@ class BookResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(), // Agrega la acción de "Ver"
-                Tables\Actions\EditAction::make(), // Mantén la acción de "Editar" en la columna de acciones
+                Tables\Actions\ViewAction::make(), 
+                Tables\Actions\EditAction::make(), 
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\BulkAction::make('exportar_pdf')
+            ->label('Exportar PDF')
+            ->icon('heroicon-o-document-arrow-down')
+            ->action(function (\Illuminate\Support\Collection $records) {
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.listado', [
+                    'books' => $records,
+                ]);
+
+        return response()->streamDownload(
+            fn () => print($pdf->stream()),
+            'listado_libros.pdf'
+        );
+    })
+    ->deselectRecordsAfterCompletion(),
+
                 ]),
             ])
-            ->defaultSort('title') // Define una columna de ordenamiento por defecto
-            ->recordUrl(null); // Deshabilita la redirección al hacer clic en la fila
+            ->defaultSort('title') 
+            ->recordUrl(null); 
     }
 
     public static function getRelations(): array
