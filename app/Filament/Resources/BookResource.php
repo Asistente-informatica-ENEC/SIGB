@@ -27,15 +27,16 @@ class BookResource extends Resource
     protected static ?string $model = Book::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    public static ?string $navigationGroup = 'Gestión de Biblioteca';
     
     public static function getModelLabel(): string
     {
-        return 'Libro';
+        return 'Catálogo';
     }
     
     public static function getPluralModelLabel(): string
     {
-        return 'Libros';
+        return 'Catálogo';
     }
     public static function form(Form $form): Form
     {
@@ -104,7 +105,7 @@ class BookResource extends Resource
                     ->colors([
                         'success' => 'disponible',
                         'danger' => 'prestado',
-                        'info' => 'reparacion',
+                        'warning' => 'reparacion',
                         'gray' => 'retirado',
                     ]),
                     TextColumn::make('authors')

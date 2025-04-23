@@ -20,6 +20,7 @@ class PublishingHouseResource extends Resource
     protected static ?string $model = Publishing_House::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    public static ?string $navigationGroup = 'Gestión de Biblioteca';
 
     public static function form(Form $form): Form
     {

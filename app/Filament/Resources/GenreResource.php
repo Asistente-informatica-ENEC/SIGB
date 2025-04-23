@@ -20,6 +20,7 @@ class GenreResource extends Resource
     protected static ?string $model = Genre::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    public static ?string $navigationGroup = 'Gestión de Biblioteca';
 
     public static function form(Form $form): Form
     {

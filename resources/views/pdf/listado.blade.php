@@ -5,13 +5,23 @@
     <title>Listado de Libros</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 10px; }
+        .header { text-align: center; margin-bottom: 10px; }
+        .logo { height: 60px; }
+        .title { font-size: 16px; font-weight: bold; margin-top: 10px; }
+        .subtitle { font-size: 14px; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #000; padding: 5px; text-align: left; }
-        th { background-color: #eee; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f5f5f5; }
     </style>
 </head>
 <body>
-    <h2>Listado de Libros Seleccionados</h2>
+
+    <div class="header">
+        <img src="{{ public_path('logo1.png') }}" class="logo" alt="Logo Escuela">
+        <div class="title">Escuela Nacional de Enfermería de Cobán e INDAPSV</div>
+        <div class="subtitle">Listado de Libros de la Biblioteca</div>
+        <div>Generado el {{ now()->format('d/m/Y H:i') }}</div>
+    </div>
 
     <table>
         <thead>

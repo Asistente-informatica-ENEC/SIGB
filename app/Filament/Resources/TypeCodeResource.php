@@ -20,6 +20,7 @@ class TypeCodeResource extends Resource
     protected static ?string $model = TypeCode::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    public static ?string $navigationGroup = 'Gestión de Biblioteca';
 
     public static function form(Form $form): Form
     {
