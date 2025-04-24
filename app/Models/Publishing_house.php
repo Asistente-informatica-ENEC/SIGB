@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Publishing_house extends Model
 {
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
     use HasFactory;
 
     protected $fillable = [

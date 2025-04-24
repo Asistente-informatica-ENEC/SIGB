@@ -14,6 +14,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use EightyNine\ExcelImport\Actions\ImportAction;
+use EightyNine\ExcelImportAction;
+
 
 class AuthorResource extends Resource
 {
@@ -54,6 +57,7 @@ class AuthorResource extends Resource
                 TextColumn::make('country')->label('País')->sortable()->searchable(),
                 //
             ])
+
             ->filters([
                 //
             ])

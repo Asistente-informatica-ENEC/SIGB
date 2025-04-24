@@ -5,6 +5,7 @@ namespace App\Filament\Resources\BookResource\Pages;
 use App\Filament\Resources\BookResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use EightyNine\ExcelImport\ExcelImportAction;
 
 class ListBooks extends ListRecords
 {
@@ -13,7 +14,11 @@ class ListBooks extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            ExcelImportAction::make()
+            ->color("primary")
+            ->label('Importar'),
+            Actions\CreateAction::make()
+            ->label('Crear nuevo'),
         ];
     }
 }

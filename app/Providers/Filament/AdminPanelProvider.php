@@ -43,7 +43,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 'Gestión de Biblioteca',
-                'Catálogo',
+                'Prestamos',
                 'Configuración',
                 ])
             ->middleware([
