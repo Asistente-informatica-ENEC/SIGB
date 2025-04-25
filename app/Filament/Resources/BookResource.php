@@ -140,7 +140,7 @@ class BookResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()
-                ->modalHeading(fn ($record) => "Detalles del recurso bibliografico: " . $record->title), // Cambia el título aquí
+                ->modalHeading(fn ($record) => "Detalles del recurso bibliografico: " . $record->title),
                 Tables\Actions\EditAction::make(), 
                 Tables\Actions\EditAction::make(), 
             ])

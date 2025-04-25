@@ -14,9 +14,6 @@ class ListBooks extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            ExcelImportAction::make()
-            ->color("primary")
-            ->label('Importar'),
             Actions\CreateAction::make()
             ->label('Crear nuevo'),
         ];
