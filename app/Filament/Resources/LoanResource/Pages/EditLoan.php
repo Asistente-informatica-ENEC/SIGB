@@ -16,4 +16,14 @@ class EditLoan extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+    
+    protected function afterSave(): void
+    {
+        // Si el estado cambió a 'devuelto', actualizamos el estado del libro
+        if ($this->record->status === 'devuelto') {
+            $this->record->book->update([
+                'status' => 'disponible',
+            ]);
+        }
+    }
 }

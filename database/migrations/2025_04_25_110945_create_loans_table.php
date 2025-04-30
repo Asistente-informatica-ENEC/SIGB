@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('requester');
             $table->foreignId('book_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->date('loan_date')->nullable();
             $table->date('return_date')->nullable();
             $table->enum('status', ['prestado','devuelto'])->default('prestado');

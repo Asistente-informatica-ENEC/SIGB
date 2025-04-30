@@ -80,8 +80,10 @@ class BookResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('title')->label('Título')->searchable()->sortable(),
-                TextColumn::make('codigo') // Nombre de la nueva columna combinada
+                TextColumn::make('title')->label('Título')->limit(50)
+                ->tooltip(fn ($record) => $record->title)
+                ->searchable()->sortable(),
+                TextColumn::make('codigo') 
                 ->label('Código')
                 ->getStateUsing(function ($record) {
                     return $record->typeCode->name . '-' . $record->book_code;
@@ -141,8 +143,15 @@ class BookResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make()
                 ->modalHeading(fn ($record) => "Detalles del recurso bibliografico: " . $record->title),
-                Tables\Actions\EditAction::make(), 
-                Tables\Actions\EditAction::make(), 
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('prestar')
+                ->label('Prestar')
+                ->icon('heroicon-m-book-open')
+                ->url(fn (Book $record) => route('filament.admin.resources.loans.create', [
+                    'book_id' => $record->id,
+                ]))
+                ->visible(fn (Book $record) => $record->status === 'disponible')
+                ->openUrlInNewTab(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -171,7 +180,7 @@ class BookResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            
         ];
     }
 
@@ -183,4 +192,6 @@ class BookResource extends Resource
             'edit' => Pages\EditBook::route('/{record}/edit'),
         ];
     }
+
+    
 }

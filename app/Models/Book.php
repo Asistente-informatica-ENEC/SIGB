@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Loan;
 
 class Book extends Model
 {
@@ -46,5 +47,10 @@ class Book extends Model
     public function typeCode()
     {
         return $this->belongsTo(TypeCode::class);
+    }
+
+    public function loans()
+    {
+        return $this->hasMany(Loan::class);
     }
 }
