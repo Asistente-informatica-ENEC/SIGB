@@ -74,11 +74,11 @@ class LoanResource extends Resource
 
         return $table
             ->columns([
-                TextColumn::make('requester')->label('Solicitante'),
-                TextColumn::make('book.title')->label('Título'),
-                TextColumn::make('loan_date')->label('Fecha de préstamo'),
-                TextColumn::make('return_date')->label('Fecha establecida para devolución'),
-                TextColumn::make('status')->label('Estado')->badge(),
+                TextColumn::make('requester')->label('Solicitante')->searchable()->sortable(),
+                TextColumn::make('book.title')->label('Título')->searchable()->sortable(),
+                TextColumn::make('loan_date')->label('Fecha de préstamo')->searchable()->sortable(),
+                TextColumn::make('return_date')->label('Fecha establecida para devolución')->searchable()->sortable(),
+                TextColumn::make('status')->label('Estado')->badge()->searchable()->sortable(),
             ...($hayRetrasos ? [
                 TextColumn::make('estado_entrega')
                     ->label('Estado de Entrega')
@@ -95,9 +95,10 @@ class LoanResource extends Resource
                         return null;
                     })
                     ->color('danger')
+                    ->searchable()
                     ->sortable(),
                     ] : []),
-                TextColumn::make('user.name')->label('Gestionado por'),
+                TextColumn::make('user.name')->label('Gestionado por')->searchable()->sortable(),
             ])
             ->defaultSort('loan_date', 'desc')
             ->filters([
