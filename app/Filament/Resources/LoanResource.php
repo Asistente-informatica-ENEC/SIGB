@@ -16,6 +16,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -25,6 +26,8 @@ class LoanResource extends Resource
     protected static ?string $model = Loan::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    public static ?string $navigationGroup = 'Préstamos';
 
     
     public static function getModelLabel(): string
@@ -45,12 +48,15 @@ class LoanResource extends Resource
                 TextInput::make('requester')->label('Solicitante')->required(),
                 Select::make('book_id')
                 ->label('Libro')
-                ->default(request()->get('book_id'))
+                ->relationship('book', 'title')
+                ->searchable()
+                ->preload()
                 ->options(function () {
+                    // Solo mostrar libros disponibles
                     return \App\Models\Book::where('status', 'disponible')->pluck('title', 'id');
                 })
-                ->required()
-                ->searchable(),
+                ->getOptionLabelFromRecordUsing(fn ($record) => $record->title) // Mostrar título correctamente
+                ->required(),
                 DatePicker::make('loan_date')->label('Fecha de prestamo')
                 ->default(now())
                 ->required(),
@@ -76,8 +82,8 @@ class LoanResource extends Resource
             ->columns([
                 TextColumn::make('requester')->label('Solicitante')->searchable()->sortable(),
                 TextColumn::make('book.title')->label('Título')->searchable()->sortable(),
-                TextColumn::make('loan_date')->label('Fecha de préstamo')->searchable()->sortable(),
-                TextColumn::make('return_date')->label('Fecha establecida para devolución')->searchable()->sortable(),
+                TextColumn::make('loan_date')->label('Fecha de préstamo')->dateTime('d/m/Y')->searchable()->sortable(),
+                TextColumn::make('return_date')->label('Fecha para devolución')->dateTime('d/m/Y')->searchable()->sortable(),
                 TextColumn::make('status')->label('Estado')->badge()->searchable()->sortable(),
             ...($hayRetrasos ? [
                 TextColumn::make('estado_entrega')
@@ -98,6 +104,43 @@ class LoanResource extends Resource
                     ->searchable()
                     ->sortable(),
                     ] : []),
+                    ...($hayRetrasos ? [
+                        TextColumn::make('estado_entrega')
+                            ->label('Estado de Entrega')
+                            ->getStateUsing(function ($record) {
+                                if (
+                                    isset($record->status, $record->return_date) &&
+                                    $record->status === 'prestado' &&
+                                    $record->return_date !== null &&
+                                    now()->gt($record->return_date)
+                                ) {
+                                    return 'Retrasado';
+                                }
+                    
+                                return null;
+                            })
+                            ->color('danger')
+                            ->searchable()
+                            ->sortable(),
+                    
+                        TextColumn::make('dias_retraso')
+                            ->label('Días de Retraso')
+                            ->getStateUsing(function ($record) {
+                                if (
+                                    isset($record->status, $record->return_date) &&
+                                    $record->status === 'prestado' &&
+                                    $record->return_date !== null &&
+                                    now()->gt($record->return_date)
+                                ) {
+                                    return now()->diffInDays($record->return_date);
+                                }
+                    
+                                return null;
+                            })
+                            ->color('danger')
+                            ->sortable(),
+                    ] : []),
+                    
                 TextColumn::make('user.name')->label('Gestionado por')->searchable()->sortable(),
             ])
             ->defaultSort('loan_date', 'desc')
@@ -126,7 +169,6 @@ class LoanResource extends Resource
         return [
             'index' => Pages\ListLoans::route('/'),
             'create' => Pages\CreateLoan::route('/create'),
-            'edit' => Pages\EditLoan::route('/{record}/edit'),
         ];
     }
 }

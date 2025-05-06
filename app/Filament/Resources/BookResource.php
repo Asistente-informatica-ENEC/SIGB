@@ -46,11 +46,17 @@ class BookResource extends Resource
                 Select::make('type_code_id')->label('Tipo de recurso')->relationship('typeCode','name')->required(),
                 TextInput::make('book_code')->label('código de recurso')->required()->maxLength(255),
                 Select::make('status')->label('Estado')->options([
-                    'disponible'=>'Disponible',
-                    'prestado'=>'Prestado',
                     'reparacion'=>'En reparación',
                     'retirado'=>'Retirado',
-                ])->required()->default('disponible')->native(false),
+                ])->required()->default('disponible')->native(false)
+                ->disabled(function ($record) {
+                    // Si no hay registro (creación), no deshabilitar
+                    if (!$record) {
+                        return false;
+                    }
+                    // Deshabilitar si el libro tiene préstamos activos
+                    return $record->status === 'prestado' && $record->loans()->where('return_date', null)->exists();
+                }),
                 Select::make('author_id')->label('Autor/es')->relationship('authors','name')
                 ->getOptionLabelFromRecordUsing(fn ($record) => $record->name . ' ' . $record->lastname_1)
                 ->multiple()

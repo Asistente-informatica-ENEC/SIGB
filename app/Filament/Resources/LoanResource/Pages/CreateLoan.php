@@ -5,6 +5,7 @@ namespace App\Filament\Resources\LoanResource\Pages;
 use App\Filament\Resources\LoanResource;
 use App\Models\Book;
 use Filament\Actions;
+use Filament\Support\Contracts\HasLabel;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateLoan extends CreateRecord
@@ -29,5 +30,11 @@ class CreateLoan extends CreateRecord
         Book::where('id', $bookId)->update([
             'status' => 'prestado',
         ]);
+    }
+
+    protected function getCreatedRedirectUrl(): string
+    {
+        return LoanResource::getUrl(); 
+
     }
 }

@@ -26,4 +26,14 @@ class EditLoan extends EditRecord
             ]);
         }
     }
+
+    protected function beforeDelete(): void
+{
+    if ($this->record->status === 'prestado') {
+        $this->record->book->update([
+            'status' => 'disponible',
+        ]);
+    }
+}
+
 }
