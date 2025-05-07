@@ -42,25 +42,32 @@ class LoanResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $isEdit = request()->routeIs('filament.admin.resources.loans.edit');
+        
         return $form
             ->schema([
                 Hidden::make('user_id')->default(fn()=>Auth::id()),
-                TextInput::make('requester')->label('Solicitante')->required(),
+                TextInput::make('requester')->label('Solicitante')
+                ->disabled($isEdit)
+                ->required(),
                 Select::make('book_id')
                 ->label('Libro')
                 ->relationship('book', 'title')
                 ->searchable()
                 ->preload()
-                ->options(function () {
-                    // Solo mostrar libros disponibles
-                    return \App\Models\Book::where('status', 'disponible')->pluck('title', 'id');
-                })
-                ->getOptionLabelFromRecordUsing(fn ($record) => $record->title) // Mostrar título correctamente
+                ->options(fn () => \App\Models\Book::where('status', 'disponible')->pluck('title', 'id'))
+                ->default(request()->get('book_id'))
+                ->disabled(fn () => request()->has('book_id'))
+                ->getOptionLabelFromRecordUsing(fn ($record) => $record->title)
+                ->disabled($isEdit)
                 ->required(),
                 DatePicker::make('loan_date')->label('Fecha de prestamo')
                 ->default(now())
+                ->disabled(fn (string $context) => $context === 'create')
+                ->disabled($isEdit)
                 ->required(),
-                DatePicker::make('return_date')->label('Fecha de devolución')->required(),
+                DatePicker::make('return_date')->label('Fecha de devolución')->required()
+                ->disabled($isEdit),
                 Select::make('status')->label('Estado')
                 ->options([
                     'prestado'=>'Prestado',
@@ -169,6 +176,10 @@ class LoanResource extends Resource
         return [
             'index' => Pages\ListLoans::route('/'),
             'create' => Pages\CreateLoan::route('/create'),
+            'edit' => Pages\EditLoan::route('/{record}/edit'),
+
         ];
     }
+
+    
 }

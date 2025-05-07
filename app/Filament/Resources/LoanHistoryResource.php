@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -19,25 +20,32 @@ class LoanHistoryResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    public static ?string $navigationGroup = 'Préstamos';
+
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([
-                //
-            ]);
+            ->schema([]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                //
+                TextColumn::make('requester')->label('Solicitante')->searchable()->sortable(),
+                TextColumn::make('book.title')->label('Título del Libro')->searchable()->sortable(),
+                TextColumn::make('loan_date')->label('Fecha de Préstamo')->date('d/m/Y')->sortable(),
+                TextColumn::make('return_date')->label('Fecha de Devolución')->date('d/m/Y')->sortable(),
+                TextColumn::make('status')->label('Estado')->badge()->sortable(),
+                TextColumn::make('user.name')->label('Gestionado por')->searchable()->sortable(),
             ])
+            ->defaultSort('loan_date', 'desc')
+
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -57,8 +65,7 @@ class LoanHistoryResource extends Resource
     {
         return [
             'index' => Pages\ListLoanHistories::route('/'),
-            'create' => Pages\CreateLoanHistory::route('/create'),
-            'edit' => Pages\EditLoanHistory::route('/{record}/edit'),
+
         ];
     }
 }

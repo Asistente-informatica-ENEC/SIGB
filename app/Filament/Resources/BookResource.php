@@ -46,6 +46,8 @@ class BookResource extends Resource
                 Select::make('type_code_id')->label('Tipo de recurso')->relationship('typeCode','name')->required(),
                 TextInput::make('book_code')->label('código de recurso')->required()->maxLength(255),
                 Select::make('status')->label('Estado')->options([
+                    'disponible' => 'Disponible',
+                    'prestado' => 'Prestado',
                     'reparacion'=>'En reparación',
                     'retirado'=>'Retirado',
                 ])->required()->default('disponible')->native(false)

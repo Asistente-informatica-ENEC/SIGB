@@ -19,6 +19,7 @@ class CreateLoan extends CreateRecord
         }
 
         $data['user_id'] = auth()->id(); 
+        $data['loan_date'] = now();
         return $data;
     }
 
