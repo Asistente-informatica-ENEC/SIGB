@@ -11,6 +11,7 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\BadgeColumn;
+use Filament\Forms\Components\Radio;
 use Illuminate\Support\Facades\Auth;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -74,7 +75,25 @@ class LoanResource extends Resource
                     'devuelto'=>'Devuelto',
                 ])
                 ->default('prestado'),
-                
+                Radio::make('procedencia')
+                ->label('Procedencia académica')
+                ->options([
+                    'Técnico en Enfermería - 1er año' => 'Técnico en Enfermería - 1er año',
+                    'Técnico en Enfermería - 2do año' => 'Técnico en Enfermería - 2do año',
+                    'Técnico en Enfermería - 3er año' => 'Técnico en Enfermería - 3er año',
+                    'Licenciatura en Enfermería - 4to año' => 'Licenciatura en Enfermería - 4to año',
+                    'Licenciatura en Enfermería - 5to año' => 'Licenciatura en Enfermería - 5to año',
+                    'Auxiliares de Enfermería - A' => 'Auxiliares de Enfermería - A',
+                    'Auxiliares de Enfermería - B' => 'Auxiliares de Enfermería - B',
+                    'Auxiliares de Enfermería - C' => 'Auxiliares de Enfermería - C',
+                    'Auxiliares de Enfermería - D' => 'Auxiliares de Enfermería - D',
+                    'Laboratorio Clínico' => 'Laboratorio Clínico',
+                    'Personal' => 'Personal',
+                    'Externo' => 'Externo',
+                ])
+                ->columns(3)
+                ->columnSpanFull()
+                ->required(),
             ]);
     }
 
@@ -88,7 +107,12 @@ class LoanResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('requester')->label('Solicitante')->searchable()->sortable(),
-                TextColumn::make('book.title')->label('Título')->searchable()->sortable(),
+                TextColumn::make('procedencia')->label('Procedencia')->sortable()->searchable()->limit(15)
+                ->tooltip(fn ($record) => $record->procedencia),
+                TextColumn::make('book.title')->label('Título')
+                ->limit(50)
+                ->tooltip(fn ($record) => $record->title)
+                ->searchable()->sortable(),
                 TextColumn::make('loan_date')->label('Fecha de préstamo')->dateTime('d/m/Y')->searchable()->sortable(),
                 TextColumn::make('return_date')->label('Fecha para devolución')->dateTime('d/m/Y')->searchable()->sortable(),
                 TextColumn::make('status')->label('Estado')->badge()->searchable()->sortable(),
@@ -127,7 +151,6 @@ class LoanResource extends Resource
                                 return null;
                             })
                             ->color('danger')
-                            ->searchable()
                             ->sortable(),
                     
                         TextColumn::make('dias_retraso')
@@ -159,9 +182,26 @@ class LoanResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+                    Tables\Actions\BulkAction::make('exportar_pdf')
+                    ->label('Generar vale de préstamo')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->action(function (\Illuminate\Support\Collection $records) {
+                        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.vale-prestamo', [
+                            'loans' => $records,
+                        ]);
+                
+                        return response()->streamDownload(
+                            fn () => print($pdf->stream()),
+                            'vales-prestamo.pdf'
+                        );
+                    })
+                
+        ->deselectRecordsAfterCompletion(),
+    
+                    ]),
+                ])
+                
+                ->recordUrl(null); 
     }
 
     public static function getRelations(): array

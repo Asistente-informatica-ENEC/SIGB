@@ -22,6 +22,16 @@ class LoanHistoryResource extends Resource
 
     public static ?string $navigationGroup = 'Préstamos';
 
+    public static function getModelLabel(): string
+    {
+        return 'Historial de préstamos';
+    }
+    
+    public static function getPluralModelLabel(): string
+    {
+        return 'Historial de préstamos';
+    }
+
     public static function form(Form $form): Form
     {
         return $form
