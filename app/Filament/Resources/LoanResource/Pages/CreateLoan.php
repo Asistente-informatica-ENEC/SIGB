@@ -38,4 +38,8 @@ class CreateLoan extends CreateRecord
         return LoanResource::getUrl(); 
 
     }
+
 }
+
+
+

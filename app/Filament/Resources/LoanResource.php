@@ -21,6 +21,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Livewire\Features\SupportDisablingBackButtonCache\DisableBackButtonCacheMiddleware;
 
 class LoanResource extends Resource
 {
@@ -69,12 +70,6 @@ class LoanResource extends Resource
                 ->required(),
                 DatePicker::make('return_date')->label('Fecha de devolución')->required()
                 ->disabled($isEdit),
-                Select::make('status')->label('Estado')
-                ->options([
-                    'prestado'=>'Prestado',
-                    'devuelto'=>'Devuelto',
-                ])
-                ->default('prestado'),
                 Radio::make('procedencia')
                 ->label('Procedencia académica')
                 ->options([
@@ -93,8 +88,11 @@ class LoanResource extends Resource
                 ])
                 ->columns(3)
                 ->columnSpanFull()
-                ->required(),
+                ->required()
+                ->Disabled($isEdit),
+                
             ]);
+
     }
 
     public static function table(Table $table): Table
@@ -113,8 +111,8 @@ class LoanResource extends Resource
                 ->limit(50)
                 ->tooltip(fn ($record) => $record->title)
                 ->searchable()->sortable(),
-                TextColumn::make('loan_date')->label('Fecha de préstamo')->dateTime('d/m/Y')->searchable()->sortable(),
-                TextColumn::make('return_date')->label('Fecha para devolución')->dateTime('d/m/Y')->searchable()->sortable(),
+                TextColumn::make('loan_date')->label('Fecha de préstamo')->dateTime('d/m/Y H:i')->searchable()->sortable(),
+                TextColumn::make('return_date')->label('Fecha para devolución')->dateTime('d/m/Y H:i')->searchable()->sortable(),
                 TextColumn::make('status')->label('Estado')->badge()->searchable()->sortable(),
             ...($hayRetrasos ? [
                 TextColumn::make('estado_entrega')
@@ -221,5 +219,5 @@ class LoanResource extends Resource
         ];
     }
 
-    
+
 }

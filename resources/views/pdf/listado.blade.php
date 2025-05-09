@@ -19,7 +19,7 @@
     <div class="header">
         <img src="{{ public_path('logo1.png') }}" class="logo" alt="Logo Escuela">
         <div class="title">Escuela Nacional de Enfermería de Cobán e INDAPSV</div>
-        <div class="subtitle">Listado de Libros de la Biblioteca</div>
+        <div class="subtitle">Listado de Libros de Biblioteca</div>
         <div>Generado el {{ now()->format('d/m/Y H:i') }}</div>
     </div>
 

@@ -4,8 +4,14 @@ namespace App\Filament\Resources\LoanResource\Pages;
 
 use App\Filament\Resources\LoanResource;
 use App\Models\LoanHistory;
+use App\Models\Book;
 use Filament\Actions;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\EditRecord;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Filament\Forms\Components\Actions as ComponentsActions;
+use Filament\Notifications\Notification;
+use Filament\Actions\CancelAction; 
 
 class EditLoan extends EditRecord
 {
@@ -14,44 +20,78 @@ class EditLoan extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            // Botón para generar vale de préstamo
+            Actions\Action::make('generar_vale')
+                ->label('Generar Vale de Préstamo')
+                ->icon('heroicon-o-document-arrow-down')
+                ->action(function ($record) {
+                    $pdf = Pdf::loadView('pdf.vale-prestamo', [
+                        'loans' => collect([$record]),
+                    ]);
+
+                    return response()->streamDownload(
+                        fn () => print($pdf->stream()),
+                        "vale-prestamo-{$record->id}.pdf"
+                    );
+                })
+                ->visible(fn ($record) => $record->status === 'prestado'),
+
+            // Botón para marcar como devuelto
+            Actions\Action::make('marcarComoDevuelto')
+                ->label('Marcar como devuelto')
+                ->icon('heroicon-o-check-circle')
+                ->color('success')
+                ->requiresConfirmation()
+                ->visible(fn ($record) => $record->status === 'prestado')
+                ->action(function ($record) {
+                    // 1. Guardar en historial
+                    LoanHistory::create([
+                        'loan_id'     => $record->id,
+                        'requester'   => $record->requester,
+                        'book_id'     => $record->book_id,
+                        'loan_date'   => $record->loan_date,
+                        'return_date' => $record->return_date,
+                        'procedencia'=> $record->procedencia,
+                        'user_id'     => $record->user_id,
+                        'status'      => 'devuelto',
+                    ]);
+
+                    // 2. Actualizar libro como disponible
+                    $record->book->update(['status' => 'disponible']);
+
+                    // 3. Eliminar préstamo activo
+                    $record->delete();
+
+                    // 4. Notificar y redirigir
+                    Notification::make()
+                        ->title('Préstamo marcado como devuelto.')
+                        ->success()
+                        ->send();
+
+                    $this->redirect(LoanResource::getUrl());
+                }),
         ];
     }
-    
-    protected function afterSave(): void
+
+    protected function getFormActions(): array
     {
-        if ($this->record->status === 'devuelto') {
-            // 1. Guardar en el historial
-            \App\Models\LoanHistory::create([
-                'requester'    => $this->record->requester,
-                'book_id'      => $this->record->book_id,
-                'loan_date'    => $this->record->loan_date,
-                'return_date'  => $this->record->return_date,
-                'status'       => $this->record->status,
-                'user_id'      => $this->record->user_id,
-            ]);
-    
-            // 2. Actualizar el libro como disponible
+        return [
+        Action::make('cancelar')
+            ->label('Regresar')
+            ->url(LoanResource::getUrl())
+            ->color('gray')
+        ];
+    }
+
+    protected function beforeDelete(): void
+    {
+        if ($this->record->status === 'prestado') {
             $this->record->book->update([
                 'status' => 'disponible',
             ]);
-    
-            // 3. Eliminar el préstamo actual
-            $this->record->delete();
-    
-            // 4. Redirigir al listado de préstamos
-            $this->redirect('/admin/loans');
         }
     }
+
     
-
-    protected function beforeDelete(): void
-{
-    if ($this->record->status === 'prestado') {
-        $this->record->book->update([
-            'status' => 'disponible',
-        ]);
-    }
 }
 
-}

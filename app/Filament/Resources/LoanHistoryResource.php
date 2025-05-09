@@ -42,10 +42,11 @@ class LoanHistoryResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('loan_date')->label('Fecha de Préstamo')->date('d/m/Y H:i')->sortable(),
                 TextColumn::make('requester')->label('Solicitante')->searchable()->sortable(),
                 TextColumn::make('book.title')->label('Título del Libro')->searchable()->sortable(),
-                TextColumn::make('loan_date')->label('Fecha de Préstamo')->date('d/m/Y')->sortable(),
-                TextColumn::make('return_date')->label('Fecha de Devolución')->date('d/m/Y')->sortable(),
+                TextColumn::make('return_date')->label('Fecha para Devolución')->date('d/m/Y')->sortable(),
+                TextColumn::make('created_at')->label('Fecha de Devolución')->dateTime('d/m/Y H:i')->sortable(),
                 TextColumn::make('status')->label('Estado')->badge()->sortable(),
                 TextColumn::make('user.name')->label('Gestionado por')->searchable()->sortable(),
             ])

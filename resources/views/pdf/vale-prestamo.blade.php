@@ -4,9 +4,9 @@
     <meta charset="utf-8">
     <title>Vales de Préstamo</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 10px; margin: 20px; }
-        .header { text-align: center; margin-bottom: 10px; }
-        .logo { height: 50px; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 10px; margin: 10px; }
+        .header { text-align: center; margin-bottom: 5px; }
+        .logo { height: 60px; }
         .title { font-size: 14px; font-weight: bold; margin: 10px 0; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #000; }
         th, td { padding: 6px; text-align: left; border: 1px solid #000; vertical-align: top; }
@@ -64,20 +64,29 @@
             </tr>
             <tr>
                 <th>Fecha del Préstamo:</th>
-                <td>{{ $loan->loan_date }}</td>
+                <td>
+                    @if ($loan->loan_date)
+                        {{ date('d/m/Y', strtotime($loan->loan_date)) }}
+                    @else
+                        Sin fecha de préstamo
+                    @endif
+                </td>
                 <th>Fecha de Devolución:</th>
-                <td>{{ $loan->return_date }}</td>
+                <td>
+                    @if ($loan->return_date)
+                        {{ date('d/m/Y', strtotime($loan->return_date)) }}
+                    @else
+                        Sin fecha de devolución
+                    @endif
+                </td>
             </tr>
             <tr>
                 <th colspan="4">Firma del solicitante:</th>
             </tr>
-            <tr>
-                <td colspan="4" style="height: 40px;"></td>
-            </tr>
+
         </table>
     </div>
 @endforeach
-
 </body>
 </html>
 
