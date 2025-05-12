@@ -19,6 +19,7 @@ use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 
@@ -145,9 +146,104 @@ class BookResource extends Resource
                 ->tooltip(fn ($record) => $record->themes)->searchable()->sortable(),
 
             ])
-            ->filters([
-                //
-            ])
+                ->filters([
+                    // Filtro por estado del libro
+                    Filter::make('status')
+                        ->label('Estado')
+                        ->form([
+                            Forms\Components\Select::make('value')
+                                ->label('Estado')
+                                ->options([
+                                    'disponible' => 'Disponible',
+                                    'prestado' => 'Prestado',
+                                    'reparacion' => 'En reparación',
+                                    'retirado' => 'Retirado',
+                                ])
+                                ->native(false),
+                        ])
+                        ->query(function ($query, array $data) {
+                            if ($data['value']) {
+                                $query->where('status', $data['value']);
+                            }
+                        }),
+
+                    // Filtro por año de publicación
+                    Filter::make('rango_anios')
+                        ->label('Filtrar por año de publicación')
+                        ->form([
+                            TextInput::make('desde')->label('Desde')->numeric(),
+                            TextInput::make('hasta')->label('Hasta')->numeric(),
+                        ])
+                        ->query(function ($query, array $data) {
+                            return $query
+                                ->when($data['desde'], fn ($q) => $q->where('publishing_year', '>=', $data['desde']))
+                                ->when($data['hasta'], fn ($q) => $q->where('publishing_year', '<=', $data['hasta']));
+                        }),
+
+                    // Filtro por editorial
+                    Filter::make('publishingHouse_id')
+                        ->label('Editorial')
+                        ->form([
+                            Forms\Components\Select::make('value')
+                                ->label('Editorial')
+                                ->relationship('publishingHouse', 'name')
+                                ->searchable()
+                                ->preload()
+                                ->native(false),
+                        ])
+                        ->query(function ($query, array $data) {
+                            if ($data['value']) {
+                                $query->where('publishing_house_id', $data['value']);
+                            }
+                        }),
+
+                    // Filtro por género
+                    Filter::make('genre')
+                        ->label('Género')
+                        ->form([
+                            Forms\Components\Select::make('value')
+                                ->label('Género')
+                                ->options(Genre::pluck('Género', 'id')) 
+                                ->searchable()
+                                ->preload()
+                                ->native(false),
+                        ])
+                        ->query(function ($query, array $data) {
+                            if ($data['value']) {
+                                $query->whereHas('genres', fn ($q) => $q->where('genres.id', $data['value']));
+                            }
+                        }),
+
+                    // Filtro por ubicación física
+                    Filter::make('physic_location')
+                        ->label('Ubicación')
+                        ->form([
+                            Forms\Components\TextInput::make('value')->label('Ubicación'),
+                        ])
+                        ->query(function ($query, array $data) {
+                            if ($data['value']) {
+                                $query->where('physic_location', 'like', "%{$data['value']}%");
+                            }
+                        }),
+
+                    // Filtro por autor
+                    Filter::make('author')
+                        ->label('Autor')
+                        ->form([
+                            Forms\Components\Select::make('value')
+                                ->label('Autor')
+                                ->relationship('authors', fn ($query) => $query->selectRaw("CONCAT(name, ' ', lastname_1) AS full_name, id"))
+                                ->getOptionLabelFromRecordUsing(fn ($record) => $record->name . ' ' . $record->lastname_1)
+                                ->searchable()
+                                ->preload()
+                                ->native(false),
+                        ])
+                        ->query(function ($query, array $data) {
+                            if ($data['value']) {
+                                $query->whereHas('authors', fn ($q) => $q->where('id', $data['value']));
+                            }
+                        }),
+                ])
             ->actions([
                 Tables\Actions\ViewAction::make()
                 ->modalHeading(fn ($record) => "Detalles del recurso bibliografico: " . $record->title),

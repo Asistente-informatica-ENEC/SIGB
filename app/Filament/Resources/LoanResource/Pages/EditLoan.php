@@ -56,6 +56,8 @@ class EditLoan extends EditRecord
                         'status'      => 'devuelto',
                     ]);
 
+                    
+
                     // 2. Actualizar libro como disponible
                     $record->book->update(['status' => 'disponible']);
 

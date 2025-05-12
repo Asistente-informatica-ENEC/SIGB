@@ -57,7 +57,8 @@ class LoanResource extends Resource
                 ->relationship('book', 'title')
                 ->searchable()
                 ->preload()
-                ->options(fn () => \App\Models\Book::where('status', 'disponible')->pluck('title', 'id'))
+                ->options(fn () => \App\Models\Book::where('status', 'disponible')
+                ->pluck('title', 'id'))
                 ->default(request()->get('book_id'))
                 ->disabled(fn () => request()->has('book_id'))
                 ->getOptionLabelFromRecordUsing(fn ($record) => $record->title)
@@ -104,6 +105,7 @@ class LoanResource extends Resource
 
         return $table
             ->columns([
+                TextColumn::make('loan_date')->label('Fecha de préstamo')->dateTime('d/m/Y H:i')->searchable()->sortable(),
                 TextColumn::make('requester')->label('Solicitante')->searchable()->sortable(),
                 TextColumn::make('procedencia')->label('Procedencia')->sortable()->searchable()->limit(15)
                 ->tooltip(fn ($record) => $record->procedencia),
@@ -111,8 +113,7 @@ class LoanResource extends Resource
                 ->limit(50)
                 ->tooltip(fn ($record) => $record->title)
                 ->searchable()->sortable(),
-                TextColumn::make('loan_date')->label('Fecha de préstamo')->dateTime('d/m/Y H:i')->searchable()->sortable(),
-                TextColumn::make('return_date')->label('Fecha para devolución')->dateTime('d/m/Y H:i')->searchable()->sortable(),
+                TextColumn::make('return_date')->label('Fecha para devolución')->dateTime('d/m/Y')->searchable()->sortable(),
                 TextColumn::make('status')->label('Estado')->badge()->searchable()->sortable(),
             ...($hayRetrasos ? [
                 TextColumn::make('estado_entrega')
