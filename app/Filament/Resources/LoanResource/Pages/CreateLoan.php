@@ -40,13 +40,6 @@ class CreateLoan extends CreateRecord
     }
 
     
-
-    protected function afterCreate(): void
-    {
-        $this->record->book->decrement('units');
-        $this->record->book->update(['status' => 'prestado']);
-    }
-
 }
 
 

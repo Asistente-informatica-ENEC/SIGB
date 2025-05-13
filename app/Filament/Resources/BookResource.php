@@ -44,7 +44,11 @@ class BookResource extends Resource
         return $form
             ->schema([
                 TextInput::make('title')->label('Título')->required()->maxLength(255),
-                Select::make('type_code_id')->label('Tipo de recurso')->relationship('typeCode','name')->required(),
+                Select::make('type_code_id')->label('Tipo de recurso')->relationship('typeCode','name')
+                        ->createOptionForm([
+                                TextInput::make('name')->required()->label('Tipo de recurso'),
+                                ])                
+                                ->required(),
                 TextInput::make('book_code')->label('código de recurso')->required()->maxLength(255),
                 Select::make('status')->label('Estado')->options([
                     'disponible' => 'Disponible',
@@ -60,11 +64,40 @@ class BookResource extends Resource
                     // Deshabilitar si el libro tiene préstamos activos
                     return $record->status === 'prestado' && $record->loans()->where('return_date', null)->exists();
                 }),
-                Select::make('author_id')->label('Autor/es')->relationship('authors','name')
-                ->getOptionLabelFromRecordUsing(fn ($record) => $record->name . ' ' . $record->lastname_1)
-                ->multiple()
+                    Select::make('author_id')
+                        ->label('Autor/es')
+                        ->relationship(
+                            name: 'authors',
+                            titleAttribute: 'name',
+                            modifyQueryUsing: fn ($query) => $query->select('authors.id', 'authors.name', 'authors.lastname_1')
+                        )
+                        ->getOptionLabelFromRecordUsing(fn ($record) => $record->name . ' ' . $record->lastname_1)
+                        ->searchable()
+                        ->preload()
+                        ->multiple()
+                        ->required()
+                        ->createOptionForm([
+                                TextInput::make('name')->required()->label('Nombre'),
+                                TextInput::make('lastname_1')->label('Apellido')->required(),
+                                ])
+                        ->getSearchResultsUsing(function (string $search) {
+                            return \App\Models\Author::query()
+                                ->where('name', 'like', "%{$search}%")
+                                ->orWhere('lastname_1', 'like', "%{$search}%")
+                                ->limit(50)
+                                ->get()
+                                ->mapWithKeys(fn ($author) => [
+                                    $author->id => $author->name . ' ' . $author->lastname_1
+                                ]);
+                        }),
+
+                Select::make('publishing_house_id')->label('Editorial')->relationship('publishingHouse', 'name')
+                            ->createOptionForm([
+                                    TextInput::make('name')->required()->label('Nombre'),
+                                    TextInput::make('location')->label('Localización')->required(),
+                                ]) 
+                ->searchable()                               
                 ->required(),
-                Select::make('publishing_house_id')->label('Editorial')->relationship('publishingHouse', 'name')->required(),
                 TextInput::make('publishing_year')->label('Año de publicación')->required()->maxLength(255),
                 TextInput::make('edition')->label('Edición')->required()->maxLength(255),
                 Select::make('genres')
@@ -72,7 +105,10 @@ class BookResource extends Resource
                     ->multiple()
                     ->preload()
                     ->searchable()
-                    ->relationship('genres', 'Género') 
+                    ->relationship('genres', 'Género')
+                    ->createOptionForm([
+                            TextInput::make('Género')->required()->label('Género'),
+                            ]) 
                     ->required(),
                 TextInput::make('inventory_number')->label('Número de inventario')->required()->maxLength(255),
                 TextInput::make('physic_location')->label('Ubicación')->required()->maxLength(255),
@@ -80,7 +116,8 @@ class BookResource extends Resource
                 ->label('Temas')
                 ->maxLength(1000)
                 ->rows(10)
-                ->columnSpan('full'),
+                ->columnSpan('full')
+                ->required(),
 
             ]);
     }
@@ -143,7 +180,7 @@ class BookResource extends Resource
                 TextColumn::make('inventory_number')->label('Número de inventario')->searchable()->sortable(),
                 TextColumn::make('physic_location')->label('Ubicación')->limit(50)->searchable()->sortable(),
                 TextColumn::make('themes')->label('Temas')->limit(25)
-                ->tooltip(fn ($record) => $record->themes)->searchable()->sortable(),
+                ->tooltip(fn ($record) => $record->themes)->searchable()->sortable()
 
             ])
                 ->filters([

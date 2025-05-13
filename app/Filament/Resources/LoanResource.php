@@ -90,7 +90,8 @@ class LoanResource extends Resource
                 ->columns(3)
                 ->columnSpanFull()
                 ->required()
-                ->Disabled($isEdit),
+                ->Disabled($isEdit)
+                ->required(),
                 
             ]);
 
