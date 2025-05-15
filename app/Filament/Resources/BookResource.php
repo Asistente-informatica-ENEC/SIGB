@@ -101,13 +101,13 @@ class BookResource extends Resource
                 TextInput::make('publishing_year')->label('Año de publicación')->required()->maxLength(255),
                 TextInput::make('edition')->label('Edición')->required()->maxLength(255),
                 Select::make('genres')
-                    ->label('Género/s')
+                    ->label('Temática/s')
                     ->multiple()
                     ->preload()
                     ->searchable()
                     ->relationship('genres', 'Género')
                     ->createOptionForm([
-                            TextInput::make('Género')->required()->label('Género'),
+                            TextInput::make('Género')->required()->label('Temática'),
                             ]) 
                     ->required(),
                 TextInput::make('inventory_number')->label('Número de inventario')->required()->maxLength(255),
@@ -174,7 +174,7 @@ class BookResource extends Resource
                 TextColumn::make('publishing_year')->label('Año de publicación')->searchable()->sortable(),
                 TextColumn::make('edition')->label('Edición')->searchable()->sortable(),
                 TextColumn::make('genres.Género')
-                ->label('Género/s')
+                ->label('Temática/s')
                 ->badge()
                 ->separator(', '),
                 TextColumn::make('inventory_number')->label('Número de inventario')->searchable()->sortable(),
@@ -236,7 +236,7 @@ class BookResource extends Resource
 
                     // Filtro por género
                     Filter::make('genre')
-                        ->label('Género')
+                        ->label('Temática')
                         ->form([
                             Forms\Components\Select::make('value')
                                 ->label('Género')
