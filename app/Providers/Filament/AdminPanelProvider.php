@@ -44,7 +44,7 @@ class AdminPanelProvider extends PanelProvider
             ->navigationGroups([
                 'Gestión de Biblioteca',
                 'Préstamos',
-                'Configuración',
+                'Sistema',
                 ])
             ->middleware([
                 EncryptCookies::class,
