@@ -16,37 +16,78 @@ class Reports extends Page
     protected static ?string $navigationGroup = 'Sistema';
 
     public string $reportType = '';
+    public string $bookStatus = '';
     public ?string $startDate = null;
     public ?string $endDate = null;
-
     public Collection $results;
 
     public function mount(): void
     {
+        
         $this->results = collect();
     }
 
     public function generateReport()
     {
-        $this->results = match ($this->reportType) {
-            'loans_by_period' => Loan::with('book')
-                ->whereBetween('loan_date', [$this->startDate, $this->endDate])
-                ->get(),
+     $this->results = match ($this->reportType) {
+        
+        'loans_by_period' => Loan::with('book')
+            ->whereBetween('loan_date', [$this->startDate, $this->endDate])
+            ->get(),
 
-            'most_borrowed_books' => Loan::selectRaw('book_id, COUNT(*) as total')
-                ->groupBy('book_id')
-                ->with('book')
-                ->orderByDesc('total')
-                ->get(),
+        'most_borrowed_books' => Loan::selectRaw('book_id, COUNT(*) as total')
+            ->groupBy('book_id')
+            ->with('book')
+            ->orderByDesc('total')
+            ->get(),
 
-            'never_borrowed_books' => Book::whereDoesntHave('loans')->get(),
+        'never_borrowed_books' => Book::whereDoesntHave('loans')->get(),
 
-            'active_loans' => Loan::with('book')->get(),
+        'active_loans' => Loan::with('book')->get(),
 
-            'loan_history' => LoanHistory::with('book')->whereBetween('loan_date', [$this->startDate, $this->endDate])->get(),
+        'loan_history' => LoanHistory::with('book')
+            ->whereBetween('loan_date', [$this->startDate, $this->endDate])
+            ->get(),
 
-            default => collect(),
+        'book_inventory' => Book::with(['authors', 'PublishingHouse'])
+            ->get()
+            ->map(function ($book) {
+                return [
+                    'Título' => $book->title,
+                    'Autor/es' => $book->authors->map(fn($author)=>$author->name.' '.$author->lastname_1)->join(', '),
+                    'Código' =>$book->book_code,
+                    'Año' =>$book->publishing_year,
+                    'Editorial' => $book->PublishingHouse->name ?? 'Sin editorial',
+                    'status' => ucfirst($book->status),
+                    'No. Inventario' => $book->inventory_number,
+                    'Ubicación' => $book->physic_location,
+                ];
+            }),
+
+        'books_by_status' => (function () {
+            $query = Book::query()->with(['authors', 'PublishingHouse', 'genres']);
+            
+            if (!empty($this->bookStatus)) {
+                $query->where('status', $this->bookStatus);
+            }
+
+            return $query->get()->map(function ($book) {
+                return [
+                    'Título' => $book->title,
+                    'Autor/es' => $book->authors->map(fn($author)=>$author->name.' '.$author->lastname_1)->join(', '),
+                    'Código' =>$book->book_code,
+                    'Año' =>$book->publishing_year,
+                    'Editorial' => $book->PublishingHouse->name ?? 'Sin editorial',
+                    'No. Inventario' => $book->inventory_number,
+                    'Ubicación' => $book->physic_location,
+                ];
+            });
+        })(),
+        default => collect(),
         };
+        
     }
 }
+
+
 
