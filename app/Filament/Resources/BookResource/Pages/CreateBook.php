@@ -18,8 +18,4 @@ class CreateBook extends CreateRecord
             ->url($this->getResource()::getUrl());
     }
 
-    protected function afterCreate(): RedirectResponse
-    {
-        return redirect($this->getResource()::getUrl('index'));
-    }
 }
