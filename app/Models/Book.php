@@ -53,4 +53,8 @@ class Book extends Model
     {
         return $this->hasMany(Loan::class);
     }
+    public function scopeDisponible($query)
+{
+    return $query->where('status', 'disponible');
+}
 }

@@ -334,5 +334,10 @@ class BookResource extends Resource
         ];
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->where('status', '!=', 'retirado');
+    }
+
     
 }
