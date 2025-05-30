@@ -6,10 +6,13 @@ use Filament\Pages\Page;
 use App\Models\Book;
 use App\Models\Loan;
 use App\Models\LoanHistory;
+use App\Models\BookRemoval;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\View;
+use Livewire\Component;  
+use Livewire\Attributes\On;
 
 class Reports extends Page
 {
@@ -117,6 +120,20 @@ class Reports extends Page
                     ];
                 }),
 
+                'book_removals' => BookRemoval::with(['book', 'user'])
+                ->whereBetween('created_at', [$this->startDate, $this->endDate])
+                ->get()
+                ->map(function ($removal) {
+                    return [
+                        'Fecha de Retiro' => \Carbon\Carbon::parse($removal->created_at)->format('d/m/Y H:i'),
+                        'Título del Libro' => $removal->book->title ?? 'Desconocido',
+                        'Código del recurso' => $removal->book->book_code ?? 'N/A',
+                        'Motivo' => $removal->reason,
+                        'Observaciones' => $removal->observation ?? '',
+                        'Gestionado por' => $removal->user->name ?? 'N/A',
+                    ];
+                }),
+
             'books_by_status' => (function () {
                 $query = Book::query()->with(['authors', 'PublishingHouse']);
 
@@ -184,7 +201,9 @@ class Reports extends Page
             'publishing_year' => 'Año de publicación',
             'genre_id' => 'Temática',
             'total' => 'Total de Préstamos',
-        ];
+            'reason' => 'Motivo',
+            'observation' => 'Observaciones',
+            ];
 
         $pdf = Pdf::loadView('reports.pdf', [
             'title' => $title,

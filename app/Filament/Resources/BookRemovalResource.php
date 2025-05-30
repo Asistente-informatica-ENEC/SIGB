@@ -52,6 +52,7 @@ class BookRemovalResource extends Resource
                 ->label('Libro')
                 ->relationship('book', 'title', fn ($query) => $query->whereIn('status', ['disponible', 'prestado']))
                 ->searchable()
+                ->sortable()
                 ->preload()
                 ->required()
                 ->reactive()
@@ -137,14 +138,16 @@ class BookRemovalResource extends Resource
                 TextColumn::make('created_at')
                 ->label('Fecha de retiro')
                 ->dateTime('d/m/Y H:i')
+                ->searchable()
                 ->sortable(),
-                TextColumn::make('book.title')->label('Libro'),
-                TextColumn::make('book.book_code')->label('Código de recurso'),
-                BadgeColumn::make('reason')->label('Motivo'),
-                TextColumn::make('user.name')->label('Responsable'),
+                TextColumn::make('book.title')->label('Libro')->searchable(),
+                TextColumn::make('book.book_code')->label('Código de recurso')->searchable(),
+                BadgeColumn::make('reason')->label('Motivo')->searchable(),
+                TextColumn::make('user.name')->label('Responsable')->searchable(),
                 TextColumn::make('observation')->label('Observaciones')->wrap(),
                 
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])
@@ -153,10 +156,21 @@ class BookRemovalResource extends Resource
                 
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([  
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+                Tables\Actions\BulkAction::make('exportar_pdf')
+                        ->label('Generar listado de retiros')
+                        ->icon('heroicon-o-document-arrow-down')
+                        ->action(function (\Illuminate\Support\Collection $records) {
+                            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.retiros', [
+                                'bookremovals' => $records,
+                            ]);
+
+                            return response()->streamDownload(
+                                fn () => print($pdf->stream()),
+                                'retiros.pdf'
+                            );
+                        })
+                        ->deselectRecordsAfterCompletion(),
+                    ]); 
     }
 
     public static function getRelations(): array

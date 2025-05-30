@@ -59,10 +59,21 @@ class LoanHistoryResource extends Resource
 
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+                    Tables\Actions\BulkAction::make('exportar_pdf')
+                        ->label('Exportar como PDF')
+                        ->icon('heroicon-o-document-arrow-down')
+                        ->action(function (\Illuminate\Support\Collection $records) {
+                            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.historial', [
+                                'loanHistories' => $records,
+                            ]);
+
+                            return response()->streamDownload(
+                                fn () => print($pdf->stream()),
+                                'historial.pdf'
+                            );
+                        })
+                        ->deselectRecordsAfterCompletion(),
+                    ]);
     }
 
     public static function getRelations(): array
