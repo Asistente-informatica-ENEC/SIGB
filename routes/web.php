@@ -20,4 +20,7 @@ Route::get('/', function () {
 
 });
 
+Route::get('/admin-redirect', function () {
+    return redirect('/admin');
 
+});
