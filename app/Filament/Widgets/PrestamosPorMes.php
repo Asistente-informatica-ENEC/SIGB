@@ -3,21 +3,27 @@
 namespace App\Filament\Widgets;
 
 use Filament\Widgets\ChartWidget;
-use App\Models\Loan;
+use App\Models\LoanHistory;
+use Illuminate\Support\Facades\DB;
 
 class PrestamosPorMes extends ChartWidget
 {
-    protected static ?string $heading = 'Préstamos por Mes';
-    protected static ?int $sort = 1; // Orden en que aparece en el dashboard
+    protected static ?string $heading = '📅 Préstamos registrados';
+    protected static ?int $sort = 1;
+
+    protected function getType(): string
+    {
+        return 'bar'; // o 'bar', 'doughnut', etc.
+    }
 
     protected function getData(): array
     {
-        $data = Loan::selectRaw("MONTH(created_at) as mes, COUNT(*) as total")
-            ->groupBy('mes')
-            ->orderBy('mes')
+        $data = LoanHistory::selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d') as month, COUNT(*) as total")
+            ->groupBy('month')
+            ->orderBy('month')
             ->get();
 
-        $labels = $data->map(fn ($item) => \Carbon\Carbon::create()->month($item->mes)->locale('es')->monthName)->toArray();
+        $labels = $data->pluck('month')->toArray();
         $values = $data->pluck('total')->toArray();
 
         return [
@@ -25,16 +31,13 @@ class PrestamosPorMes extends ChartWidget
                 [
                     'label' => 'Préstamos',
                     'data' => $values,
-                    'backgroundColor' => 'rgba(59, 130, 246, 0.7)',
+                    'borderColor' => '#3b82f6',
+                    'backgroundColor' => 'rgba(59, 130, 246, 0.5)',
+                    'fill' => true,
                 ],
             ],
             'labels' => $labels,
         ];
-    }
-
-    protected function getType(): string
-    {
-        return 'bar'; // También puedes usar 'line', 'pie', etc.
     }
 }
 

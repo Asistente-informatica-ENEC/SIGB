@@ -1,5 +1,8 @@
 <x-filament::page>
-    <div class="text-2xl font-bold mb-6 text-center">📚 Bienvenido al Sistema de Gestión Bibliotecaria</div>
+    <div class="text-2xl font-bold mb-6 text-center">Bienvenido al Sistema de Gestión Bibliotecaria</div>
+
+    <div><livewire:filament.widgets.account-widget /></div>
+
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Total de Libros -->
@@ -20,5 +23,6 @@
             <p class="text-4xl text-purple-600 mt-2">{{ \App\Models\LoanHistory::count() }}</p>
         </div>
     </div>
+
 </x-filament::page>
 
