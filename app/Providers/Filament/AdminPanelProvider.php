@@ -12,7 +12,7 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Widgets;
-use App\Filament\Pages\Dashboard;
+use App\Filament\Widgets\MyAccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -42,7 +42,17 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
+                // 1. PRIMERA FILA: MyAccountWidget (ahora con columnSpan = 'full')
+                // Ocupará la primera fila completa.
+                \App\Filament\Widgets\MyAccountWidget::class,
+
+                // 2. SEGUNDA FILA: BooksByGenreOverview (ahora con columnSpan = 'full')
+                // Forzará una nueva fila debajo de MyAccountWidget y la ocupará completamente.
+
+
+                // 3. TERCERA FILA: PrestamosPorMes (ahora con columnSpan = 'full')
+                // Forzará otra nueva fila debajo de BooksByGenreOverview y la ocupará completamente.
+
             ])
             ->navigationGroups([
                 'Gestión de Biblioteca',
