@@ -1,7 +1,7 @@
-# Sistema de Gestión Bibliotecaria
+# Sistema Integral de Gestión Bibliotecaria
 
 <p align="center">
-  <img src="https://enec.gob.gt/wp-content/uploads/2022/05/ENEC-BLANCO-120.png" alt="LOGO ENEC" width="200">
+  <img src="https://enec.gob.gt/wp-content/uploads/2022/05/ENEC-BLANCO-120.png" alt="LOGO ENEC" width="150">
 </p>
 
 Este proyecto es una herramienta desarrollada con Laravel y Filament que permite gestionar eficientemente los recursos de una biblioteca académica. Incluye funcionalidades para el control de catálogos, préstamos, devoluciones, historial y reportes.
