@@ -25,12 +25,12 @@ class TypeCodeResource extends Resource
 
     public static function getModelLabel(): string
     {
-        return 'Código';
+        return 'tipos de recurso';
     }
 
     public static function getPluralModelLabel(): string
     {
-        return 'Códigos';
+        return 'Tipos de recurso';
     }
 
     public static function form(Form $form): Form
@@ -45,7 +45,7 @@ class TypeCodeResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')->label('código')->searchable()->sortable(),
+                TextColumn::make('name')->label('Tipo de recurso')->searchable()->sortable(),
             ])
             ->filters([
                 //

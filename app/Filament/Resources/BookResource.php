@@ -21,7 +21,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
+use Illuminate\Support\Str;
 
 class BookResource extends Resource
 {
@@ -32,7 +32,7 @@ class BookResource extends Resource
     
     public static function getModelLabel(): string
     {
-        return 'Catálogo';
+        return 'Recurso bibliográfico';
     }
     
     public static function getPluralModelLabel(): string
@@ -114,7 +114,7 @@ class BookResource extends Resource
                 TextInput::make('physic_location')->label('Ubicación')->required()->maxLength(255),
                 Textarea::make('themes')
                 ->label('Temas')
-                ->maxLength(1000)
+                ->maxLength(8000)
                 ->rows(10)
                 ->columnSpan('full')
                 ->required(),
@@ -281,37 +281,62 @@ class BookResource extends Resource
                             }
                         }),
                 ])
+                
             ->actions([
-                Tables\Actions\ViewAction::make()
-                ->modalHeading(fn ($record) => "Detalles del recurso bibliografico: " . $record->title),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('prestar')
-                ->label('Prestar')
-                ->icon('heroicon-m-book-open')
-                ->url(fn (Book $record) => route('filament.admin.resources.loans.create', [
-                    'book_id' => $record->id,
-                ]))
-                ->visible(fn (Book $record) => $record->status === 'disponible')
-                ->openUrlInNewTab(),
+                Tables\Actions\ActionGroup::make([ // Aquí envolvemos las acciones en un ActionGroup
+                    Tables\Actions\ViewAction::make()
+                        ->color('info')
+                        ->modalHeading(fn ($record) => "Detalles del recurso bibliografico: " . $record->title),
+                    Tables\Actions\EditAction::make()
+                        ->color('info'),
+                    Tables\Actions\Action::make('duplicate')
+                        ->label('Duplicar')
+                        ->icon('heroicon-o-document-duplicate')
+                        ->tooltip('Duplicar este recurso bibliográfico')
+                        ->color('info')
+                        ->action(function (Book $record) {
+                            $duplicatedBook = $record->replicate();
+                            $duplicatedBook->title = $record->title;
+                            $duplicatedBook->book_code = $record->book_code;
+                            $duplicatedBook->inventory_number = 'Ingrese nuevo número de inventario';
+                            $duplicatedBook->status = 'disponible';
+
+                            $duplicatedBook->save();
+
+                            $duplicatedBook->authors()->sync($record->authors->pluck('id'));
+                            $duplicatedBook->genres()->sync($record->genres->pluck('id'));
+
+                            return redirect()->route('filament.admin.resources.books.edit', ['record' => $duplicatedBook->id]);
+                        }),
+                    Tables\Actions\Action::make('prestar')
+                        ->label('Prestar')
+                        ->color('info')
+                        ->icon('heroicon-m-book-open')
+                        ->url(fn (Book $record) => route('filament.admin.resources.loans.create', [
+                            'book_id' => $record->id,
+                        ]))
+                        ->visible(fn (Book $record) => $record->status === 'disponible')
+                        ->openUrlInNewTab(),
+                ])
+                
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                     Tables\Actions\BulkAction::make('exportar_pdf')
-            ->label('Exportar PDF')
-            ->icon('heroicon-o-document-arrow-down')
-            ->action(function (\Illuminate\Support\Collection $records) {
-                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.listado', [
-                    'books' => $records,
-                ]);
+                        ->label('Exportar PDF')
+                        ->icon('heroicon-o-document-arrow-down')
+                        ->action(function (\Illuminate\Support\Collection $records) {
+                            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.listado', [
+                                'books' => $records,
+                            ]);
 
-        return response()->streamDownload(
-            fn () => print($pdf->stream()),
-            'listado_libros.pdf'
-        );
-    })
-    ->deselectRecordsAfterCompletion(),
-
+                            return response()->streamDownload(
+                                fn () => print($pdf->stream()),
+                                'listado_libros.pdf'
+                            );
+                        })
+                        ->deselectRecordsAfterCompletion(),
                 ]),
             ])
             ->defaultSort('title') 
@@ -338,6 +363,4 @@ class BookResource extends Resource
     {
         return parent::getEloquentQuery()->where('status', '!=', 'retirado');
     }
-
-    
 }
