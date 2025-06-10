@@ -46,7 +46,11 @@ class BookResource extends Resource
                 TextInput::make('title')->label('Título')->required()->maxLength(255),
                 Select::make('type_code_id')->label('Tipo de recurso')->relationship('typeCode','name')
                         ->createOptionForm([
-                                TextInput::make('name')->required()->label('Tipo de recurso'),
+                                TextInput::make('name')->required()->label('Tipo de recurso')
+                                            ->unique('type_codes', 'name', ignoreRecord: true)
+                                                ->validationMessages([
+                                            'unique' => 'Ya existe un tipo de recurso con ese nombre.',
+                                        ]),
                                 ])                
                                 ->required(),
                 TextInput::make('book_code')->label('código de recurso')->required()->maxLength(255),
@@ -93,7 +97,11 @@ class BookResource extends Resource
 
                 Select::make('publishing_house_id')->label('Editorial')->relationship('publishingHouse', 'name')
                             ->createOptionForm([
-                                    TextInput::make('name')->required()->label('Nombre'),
+                                    TextInput::make('name')->required()->label('Nombre')
+                                    ->unique('publishing_houses', 'name', ignoreRecord: true)
+                                        ->validationMessages([
+                                            'unique' => 'Ya existe una editorial con ese nombre.',
+                                        ]),
                                     TextInput::make('location')->label('Localización')->required(),
                                 ]) 
                 ->searchable()                               
@@ -129,6 +137,39 @@ class BookResource extends Resource
                 TextColumn::make('title')->label('Título')->limit(50)
                 ->tooltip(fn ($record) => $record->title)
                 ->searchable()->sortable(),
+                TextColumn::make('authors')
+                ->label('Autor/es')->limit(25)
+                ->getStateUsing(function ($record) {
+                    return $record->authors
+                        ->map(fn ($author) => $author->name . ' ' . $author->lastname_1)
+                        ->join(', ');
+                })
+                ->sortable()
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        return $query->whereHas('authors', function (Builder $query) use ($search) {
+                            $query->where('name', 'like', "%{$search}%")
+                                ->orWhere('lastname_1', 'like', "%{$search}%");
+                        });
+                    }),
+                TextColumn::make('genres.Género')
+                ->label('Temática/s')
+                ->badge()
+                ->separator(', '),
+                TextColumn::make('publishingHouse.name')->label('Editorial')->searchable()->sortable(),
+                TextColumn::make('publishing_year')->label('Año de publicación')->searchable()->sortable(),
+                BadgeColumn::make('status')->label('Estado')->formatStateUsing(fn (string $state): string => match ($state) {
+                    'disponible' => 'Disponible',
+                    'prestado' => 'Prestado',
+                    'reparacion' => 'En reparación',
+                    'no_disponible' => 'No disponible',
+                    default => ucfirst($state),
+                })
+                    ->colors([
+                        'success' => 'disponible',
+                        'danger' => 'prestado',
+                        'warning' => 'reparacion',
+                        'gray' => 'retirado',
+                    ]),
                 TextColumn::make('codigo') 
                 ->label('Código')
                 ->getStateUsing(function ($record) {
@@ -143,40 +184,8 @@ class BookResource extends Resource
                     return $query->orderBy('type_code_id', $direction)
                         ->orderBy('book_code', $direction);
                 }),
-                BadgeColumn::make('status')->label('Estado')->formatStateUsing(fn (string $state): string => match ($state) {
-                    'disponible' => 'Disponible',
-                    'prestado' => 'Prestado',
-                    'reparacion' => 'En reparación',
-                    'no_disponible' => 'No disponible',
-                    default => ucfirst($state),
-                })
-                    ->colors([
-                        'success' => 'disponible',
-                        'danger' => 'prestado',
-                        'warning' => 'reparacion',
-                        'gray' => 'retirado',
-                    ]),
-                    TextColumn::make('authors')
-                    ->label('Autor/es')->limit(25)
-                    ->getStateUsing(function ($record) {
-                        return $record->authors
-                            ->map(fn ($author) => $author->name . ' ' . $author->lastname_1)
-                            ->join(', ');
-                    })
-                    ->sortable()
-                        ->searchable(query: function (Builder $query, string $search): Builder {
-                            return $query->whereHas('authors', function (Builder $query) use ($search) {
-                                $query->where('name', 'like', "%{$search}%")
-                                    ->orWhere('lastname_1', 'like', "%{$search}%");
-                            });
-                        }),
-                TextColumn::make('publishingHouse.name')->label('Editorial')->searchable()->sortable(),
-                TextColumn::make('publishing_year')->label('Año de publicación')->searchable()->sortable(),
+
                 TextColumn::make('edition')->label('Edición')->searchable()->sortable(),
-                TextColumn::make('genres.Género')
-                ->label('Temática/s')
-                ->badge()
-                ->separator(', '),
                 TextColumn::make('inventory_number')->label('Número de inventario')->searchable()->sortable(),
                 TextColumn::make('physic_location')->label('Ubicación')->limit(50)->searchable()->sortable(),
                 TextColumn::make('themes')->label('Temas')->limit(25)

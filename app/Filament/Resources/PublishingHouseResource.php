@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PublishingHouseResource\Pages;
-use App\Filament\Resources\PublishingHouseResource\RelationManagers;
 use App\Models\Publishing_House;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
@@ -13,8 +12,9 @@ use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Notifications\Notification;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Database\QueryException;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\DeleteBulkAction;
 
 class PublishingHouseResource extends Resource
 {
@@ -44,65 +44,76 @@ class PublishingHouseResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()
-                    ->before(function ($record, $action) {
+                DeleteAction::make()
+                    ->using(function ($record) {
                         try {
                             $record->delete();
-                            $action->halt(); // Para evitar ejecución doble
-                        } catch (\Illuminate\Database\QueryException $e) {
+
+                            Notification::make()
+                                ->title('Editorial eliminada')
+                                ->body('La editorial se eliminó correctamente.')
+                                ->success()
+                                ->send();
+
+                            return $record;
+                        } catch (QueryException $e) {
                             if ($e->getCode() === '23000') {
-                                \Filament\Notifications\Notification::make()
+                                Notification::make()
                                     ->title('No se puede eliminar la editorial')
                                     ->body('La editorial está asociada a uno o más libros y no puede ser eliminada.')
                                     ->danger()
                                     ->persistent()
                                     ->send();
 
-                                $action->halt(); // Detiene la acción predeterminada
-                            } else {
-                                throw $e; // Re-lanza errores inesperados
+                                return false;
                             }
+
+                            throw $e;
                         }
-                    })
-                    ->action(fn () => null), // Cancela la acción por defecto
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
-                        ->before(function ($records, $action) {
+                    DeleteBulkAction::make()
+                        ->action(function ($records) {
+                            $deleted = 0;
+                            $errors = 0;
+
                             foreach ($records as $record) {
                                 try {
                                     $record->delete();
-                                } catch (\Illuminate\Database\QueryException $e) {
+                                    $deleted++;
+                                } catch (QueryException $e) {
                                     if ($e->getCode() === '23000') {
-                                        Notification::make()
-                                            ->title('No se pueden eliminar algunas editoriales')
-                                            ->body('Una o más editoriales están asociadas a libros y no se pueden eliminar.')
-                                            ->danger()
-                                            ->persistent()
-                                            ->send();
-
-                                        $action->halt();
-                                        break;
+                                        $errors++;
                                     } else {
                                         throw $e;
                                     }
                                 }
                             }
 
-                            $action->halt(); // Detiene la acción predeterminada de eliminación masiva
-                        })
-                        ->action(fn () => null),
+                            if ($errors > 0) {
+                                Notification::make()
+                                    ->title('No se pudieron eliminar algunas editoriales')
+                                    ->body("Se eliminaron {$deleted} editoriales. {$errors} no se pudieron eliminar por estar asociadas a libros.")
+                                    ->danger()
+                                    ->persistent()
+                                    ->send();
+                            } elseif ($deleted > 0) {
+                                Notification::make()
+                                    ->title('Editoriales eliminadas')
+                                    ->body("Se eliminaron correctamente {$deleted} editoriales.")
+                                    ->success()
+                                    ->send();
+                            }
+                        }),
                 ]),
             ]);
-
     }
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
@@ -124,3 +135,4 @@ class PublishingHouseResource extends Resource
         return 'Editoriales';
     }
 }
+

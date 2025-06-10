@@ -14,6 +14,8 @@ use Filament\Tables\Table;
 use Filament\Notifications\Notification;
 use Illuminate\Database\QueryException;
 use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\DeleteBulkAction;
+// use Illuminate\Validation\Rule; // Esta línea no es necesaria para esta corrección, pero la puedes mantener
 
 class TypeCodeResource extends Resource
 {
@@ -25,7 +27,7 @@ class TypeCodeResource extends Resource
 
     public static function getModelLabel(): string
     {
-        return 'tipos de recurso';
+        return 'Tipos de recurso';
     }
 
     public static function getPluralModelLabel(): string
@@ -37,7 +39,25 @@ class TypeCodeResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make('name')->label('código')->required()->maxLength(255),
+                TextInput::make('name')
+                    ->label('Tipo de recurso')
+                    ->required()
+                    ->maxLength(255)
+                    // CAMBIO AQUÍ: Usar argumentos posicionales en lugar de nombrados
+                    // El primer argumento es la tabla (opcional si es el modelo del campo),
+                    // el segundo es la columna (opcional si es el nombre del campo),
+                    // el tercero es el record a ignorar, y el cuarto el mensaje.
+                    ->unique(
+                        table: TypeCode::class, // Opcional, pero explícito es bueno. Si no lo pones, Filament lo inferirá.
+                        column: 'name',         // Opcional, Filament lo inferirá del nombre del campo 'name'.
+                        ignoreRecord: true,      // Aquí se pasa el valor booleano directamente
+                        // Nota: El mensaje personalizado se define con ->validationMessages() o ->validationAttribute()
+                        // o de forma más global en Filament.
+                    )
+                    ->validationMessages([
+                        'unique' => 'El nombre del tipo de recurso ya existe.',
+                    ])
+                ,
             ]);
     }
 
@@ -53,10 +73,17 @@ class TypeCodeResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
                 DeleteAction::make()
-                    ->before(function ($record, DeleteAction $action) {
+                    ->using(function ($record) {
                         try {
                             $record->delete();
-                            $action->halt(); 
+
+                            Notification::make()
+                                ->title('Tipo de recurso eliminado')
+                                ->body('El tipo de recurso ha sido eliminado exitosamente.')
+                                ->success()
+                                ->send();
+
+                            return $record;
                         } catch (QueryException $e) {
                             if ($e->getCode() === '23000') {
                                 Notification::make()
@@ -65,44 +92,51 @@ class TypeCodeResource extends Resource
                                     ->danger()
                                     ->persistent()
                                     ->send();
-                                $action->halt();
-                            } else {
-                                throw $e;
+
+                                return false; // Evita que Filament cierre el modal como si fuera exitoso
                             }
+
+                            throw $e;
                         }
-                    })
-                    ->action(fn () => null),
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
-                        ->before(function ($records, $action) {
+                    DeleteBulkAction::make()
+                        ->action(function ($records) {
+                            $deletedCount = 0;
+                            $errorCount = 0;
+
                             foreach ($records as $record) {
                                 try {
                                     $record->delete();
-                                } catch (\Illuminate\Database\QueryException $e) {
+                                    $deletedCount++;
+                                } catch (QueryException $e) {
                                     if ($e->getCode() === '23000') {
-                                        Notification::make()
-                                            ->title('No se pueden eliminar algunos códigos')
-                                            ->body('Uno o más códigos están asociados a libros y no se pueden eliminar.')
-                                            ->danger()
-                                            ->persistent()
-                                            ->send();
-
-                                        $action->halt();
-                                        break;
+                                        $errorCount++;
                                     } else {
                                         throw $e;
                                     }
                                 }
                             }
 
-                            $action->halt(); // Evita que se intente eliminar de nuevo
-                        })
-                        ->action(fn () => null),
+                            if ($errorCount > 0) {
+                                Notification::make()
+                                    ->title('No se pudieron eliminar todos los códigos')
+                                    ->body("Se eliminaron {$deletedCount} códigos. {$errorCount} códigos están asociados a libros y no se pudieron eliminar.")
+                                    ->danger()
+                                    ->persistent()
+                                    ->send();
+                            } elseif ($deletedCount > 0) {
+                                Notification::make()
+                                    ->title('Códigos eliminados')
+                                    ->body("{$deletedCount} códigos han sido eliminados exitosamente.")
+                                    ->success()
+                                    ->send();
+                            }
+                        }),
                 ]),
             ]);
-
     }
 
     public static function getRelations(): array
@@ -119,4 +153,3 @@ class TypeCodeResource extends Resource
         ];
     }
 }
-
