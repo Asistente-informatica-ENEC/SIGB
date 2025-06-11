@@ -203,6 +203,7 @@ class Reports extends Page
             'total' => 'Total de Préstamos',
             'reason' => 'Motivo',
             'observation' => 'Observaciones',
+            'no' => 'No.'
             ];
 
         $pdf = Pdf::loadView('reports.pdf', [
