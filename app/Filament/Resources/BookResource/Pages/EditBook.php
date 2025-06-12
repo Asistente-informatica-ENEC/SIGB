@@ -26,7 +26,7 @@ class EditBook extends EditRecord
                     // Modificamos campos para la copia
                     $duplicatedBook->title = $record->title;
                     $duplicatedBook->book_code = $record->book_code;
-                    $duplicatedBook->inventory_number = 'Ingrese nuevo número de inventario';
+                    $duplicatedBook->inventory_number = '#';
                     $duplicatedBook->status = 'disponible';
 
                     $duplicatedBook->save();

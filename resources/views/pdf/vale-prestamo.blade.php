@@ -30,7 +30,7 @@
             </tr>
             <tr>
                 <th>Recurso Bibliográfico:</th>
-                <td colspan="3">{{ $loan->book->title }}</td>
+                <td colspan="3">{{ $loan->book->title }} — # Inv.: {{ $loan->book->inventory_number }}</td>
             </tr>
             <tr>
                 <th colspan="4">Procedencia Académica:</th>
@@ -71,7 +71,7 @@
                         Sin fecha de préstamo
                     @endif
                 </td>
-                <th>Fecha de Devolución:</th>
+                <th>Fecha para Devolución:</th>
                 <td>
                     @if ($loan->return_date)
                         {{ date('d/m/Y', strtotime($loan->return_date)) }}

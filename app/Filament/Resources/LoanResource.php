@@ -50,7 +50,7 @@ class LoanResource extends Resource
             ->schema([
                 Hidden::make('user_id')->default(fn()=>Auth::id()),
                 TextInput::make('requester')->label('Solicitante')
-                ->disabled($isEdit)
+                ->disabled(fn (string $context) => $context === 'edit')
                 ->required(),
                 Select::make('book_id')
                 ->label('Libro')
@@ -62,15 +62,16 @@ class LoanResource extends Resource
                 ->default(request()->get('book_id'))
                 ->disabled(fn () => request()->has('book_id'))
                 ->getOptionLabelFromRecordUsing(fn ($record) => $record->title)
-                ->disabled($isEdit)
+                ->disabled(fn (string $context) => $context === 'edit')
                 ->required(),
                 DatePicker::make('loan_date')->label('Fecha de prestamo')
                 ->default(now())
                 ->disabled(fn (string $context) => $context === 'create')
                 ->disabled($isEdit)
+                ->disabled()
                 ->required(),
                 DatePicker::make('return_date')->label('Fecha de devolución')->required()
-                ->disabled($isEdit),
+                ->disabled(fn (string $context) => $context === 'edit'),
                 Radio::make('procedencia')
                 ->label('Procedencia académica')
                 ->options([
@@ -90,7 +91,7 @@ class LoanResource extends Resource
                 ->columns(3)
                 ->columnSpanFull()
                 ->required()
-                ->Disabled($isEdit)
+                ->disabled(fn (string $context) => $context === 'edit')
                 ->required(),
                 
             ]);
@@ -178,7 +179,8 @@ class LoanResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                ->label('Detalles'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
