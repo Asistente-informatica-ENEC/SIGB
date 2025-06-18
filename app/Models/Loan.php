@@ -18,6 +18,7 @@ class Loan extends Model
         'return_date',
         'status',
         'procedencia',
+        'user_name',
 
     ];
     

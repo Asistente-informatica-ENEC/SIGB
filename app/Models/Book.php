@@ -26,6 +26,7 @@ class Book extends Model
         'edition',
         'inventory_number',
         'physic_location',
+        'pages',
         'themes',
     ];
 
@@ -52,6 +53,10 @@ class Book extends Model
     public function loans()
     {
         return $this->hasMany(Loan::class);
+    }
+    public function loanHistories()
+    {
+        return $this->hasMany(LoanHistory::class);
     }
     public function scopeDisponible($query)
 {

@@ -22,6 +22,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Filament\Notifications\Notification;
 
 class BookResource extends Resource
 {
@@ -120,6 +122,7 @@ class BookResource extends Resource
                             ]) 
                     ->required(),
                 TextInput::make('inventory_number')->label('Número de inventario')->required()->maxLength(255),
+                TextInput::make('pages')->label('Páginas')->required()->maxLength(255),
                 TextInput::make('physic_location')->label('Ubicación')->required()->maxLength(255),
                 Textarea::make('themes')
                 ->label('Temas')
@@ -196,6 +199,7 @@ class BookResource extends Resource
                 }),
 
                 TextColumn::make('edition')->label('Edición')->searchable()->sortable(),
+                TextColumn::make('pages')->label('Páginas'),
                 TextColumn::make('physic_location')->label('Ubicación')->limit(50)->searchable()->sortable(),
                 TextColumn::make('themes')->label('Temas')->limit(25)
                 ->tooltip(fn ($record) => $record->themes)->searchable()->sortable()
@@ -300,47 +304,96 @@ class BookResource extends Resource
                         }),
                 ])
                 
-            ->actions([
-                Tables\Actions\ActionGroup::make([ // Aquí envolvemos las acciones en un ActionGroup
-                    Tables\Actions\ViewAction::make()
-                        ->color('info')
-                        ->modalHeading(fn ($record) => "Detalles del recurso bibliografico: " . $record->title),
-                    Tables\Actions\EditAction::make()
-                        ->color('info'),
-                    Tables\Actions\Action::make('duplicate')
-                        ->label('Duplicar')
-                        ->icon('heroicon-o-document-duplicate')
-                        ->tooltip('Duplicar este recurso bibliográfico')
-                        ->color('info')
-                        ->action(function (Book $record) {
-                            $duplicatedBook = $record->replicate();
-                            $duplicatedBook->title = $record->title;
-                            $duplicatedBook->book_code = $record->book_code;
-                            $duplicatedBook->inventory_number = 'Ingrese nuevo número de inventario';
-                            $duplicatedBook->status = 'disponible';
+                ->actions([
+                    Tables\Actions\ActionGroup::make([
+                        Tables\Actions\ViewAction::make()
+                            ->color('info')
+                            ->modalHeading(fn ($record) => "Detalles del recurso bibliografico: " . $record->title),
+                        Tables\Actions\EditAction::make()
+                            ->color('info'),
+                        Tables\Actions\Action::make('duplicate')
+                            ->label('Duplicar')
+                            ->icon('heroicon-o-document-duplicate')
+                            ->tooltip('Duplicar este recurso bibliográfico')
+                            ->color('info')
+                            ->action(function (Book $record) {
+                                $duplicatedBook = $record->replicate();
+                                $duplicatedBook->title = $record->title;
+                                $duplicatedBook->book_code = $record->book_code;
+                                $duplicatedBook->inventory_number = 'Ingrese nuevo número de inventario';
+                                $duplicatedBook->status = 'disponible';
 
-                            $duplicatedBook->save();
+                                $duplicatedBook->save();
 
-                            $duplicatedBook->authors()->sync($record->authors->pluck('id'));
-                            $duplicatedBook->genres()->sync($record->genres->pluck('id'));
+                                $duplicatedBook->authors()->sync($record->authors->pluck('id'));
+                                $duplicatedBook->genres()->sync($record->genres->pluck('id'));
 
-                            return redirect()->route('filament.admin.resources.books.edit', ['record' => $duplicatedBook->id]);
-                        }),
-                    Tables\Actions\Action::make('prestar')
-                        ->label('Prestar')
-                        ->color('info')
-                        ->icon('heroicon-m-book-open')
-                        ->url(fn (Book $record) => route('filament.admin.resources.loans.create', [
-                            'book_id' => $record->id,
-                        ]))
-                        ->visible(fn (Book $record) => $record->status === 'disponible')
-                        ->openUrlInNewTab(),
+                                return redirect()->route('filament.admin.resources.books.edit', ['record' => $duplicatedBook->id]);
+                            }),
+                        Tables\Actions\Action::make('prestar')
+                            ->label('Prestar')
+                            ->color('info')
+                            ->icon('heroicon-m-book-open')
+                            ->url(fn (Book $record) => route('filament.admin.resources.loans.create', [
+                                'book_id' => $record->id,
+                            ]))
+                            ->visible(fn (Book $record) => $record->status === 'disponible')
+                            ->openUrlInNewTab(),
+                        Tables\Actions\DeleteAction::make()
+                            ->before(function (Book $record) {
+                                if ($record->loans()->exists() || $record->loanHistories()->exists()) {
+                                    Notification::make() // Ya no necesitas la barra invertida si importas Notification
+                                        ->title('No se puede eliminar')
+                                        ->body('Este recurso está asociado a préstamos o historial y no puede ser eliminado.')
+                                        ->danger()
+                                        ->send();
+
+                                    // Lanza una excepción para detener la acción de eliminación
+                                    throw ValidationException::withMessages([
+                                        'delete' => 'El recurso no puede ser eliminado debido a asociaciones existentes.',
+                                    ]);
+                                }
+                                // No es necesario un 'return true;' explícito aquí,
+                                // si no se lanza la excepción, la acción continuará.
+                            }),
+                    ])
                 ])
-                
-            ])
+
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+            ->before(function (Collection $records) { // Asegúrate de tipar $records como Collection
+                $blockedTitles = [];
+                $deletableRecords = new Collection(); // Colección para guardar los registros que sí se pueden eliminar
+
+                foreach ($records as $record) {
+                    if ($record->loans()->exists() || $record->loanHistories()->exists()) {
+                        $blockedTitles[] = $record->title;
+                    } else {
+                        $deletableRecords->add($record); // Agrega a los que sí se pueden eliminar
+                    }
+                }
+
+                if (!empty($blockedTitles)) {
+                    Notification::make()
+                        ->title('Eliminación parcial cancelada')
+                        ->body('No se eliminaron los siguientes registros porque están asociados a préstamos o historial: ' . implode(', ', $blockedTitles))
+                        ->danger()
+                        ->send();
+                }
+
+                // Si todos los registros estaban bloqueados, lanzamos una excepción
+                // para detener completamente la acción masiva y evitar que intente eliminar nada.
+                if ($deletableRecords->isEmpty() && !empty($blockedTitles)) {
+                    throw ValidationException::withMessages([
+                        'bulk_delete' => 'Ninguno de los recursos seleccionados puede ser eliminado debido a asociaciones existentes.',
+                    ]);
+                }
+
+                // Importante: Devuelve solo los registros que realmente se pueden eliminar.
+                // Filament usará esta colección para la operación de borrado.
+                return $deletableRecords;
+            }),
                     Tables\Actions\BulkAction::make('exportar_pdf')
                         ->label('Exportar PDF')
                         ->icon('heroicon-o-document-arrow-down')
@@ -357,6 +410,7 @@ class BookResource extends Resource
                         ->deselectRecordsAfterCompletion(),
                 ]),
             ])
+
             ->defaultSort('title') 
             ->recordUrl(null); 
     }

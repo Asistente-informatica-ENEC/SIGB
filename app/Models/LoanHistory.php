@@ -16,6 +16,7 @@ class LoanHistory extends Model
         'return_date',
         'status',
         'user_id',
+        'user_name',
     ];
 
     public function book()
@@ -28,4 +29,17 @@ class LoanHistory extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Asigna automáticamente el usuario que registra el préstamo.
+     */
+    protected static function booted()
+    {
+        static::creating(function ($loanHistory) {
+            if (auth()->check()) {
+                $loanHistory->user_id = auth()->id();
+                $loanHistory->user_name = auth()->user()->name;
+            }
+        });
+    }
 }
+

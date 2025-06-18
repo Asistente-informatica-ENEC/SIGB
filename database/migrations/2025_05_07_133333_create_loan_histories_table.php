@@ -18,7 +18,8 @@ return new class extends Migration
             $table->dateTime('loan_date');
             $table->dateTime('return_date');
             $table->string('status');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('user_name')->nullable(); 
             $table->timestamps();
         });
     }

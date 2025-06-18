@@ -48,7 +48,8 @@ class LoanHistoryResource extends Resource
                 TextColumn::make('return_date')->label('Fecha para Devolución')->date('d/m/Y')->sortable(),
                 TextColumn::make('created_at')->label('Fecha de Devolución')->dateTime('d/m/Y H:i')->sortable(),
                 TextColumn::make('status')->label('Estado')->badge()->sortable(),
-                TextColumn::make('user.name')->label('Gestionado por')->searchable()->sortable(),
+                TextColumn::make('user_name')->label('Gestionado por')->searchable()->sortable(),
+
             ])
             ->defaultSort('loan_date', 'desc')
 

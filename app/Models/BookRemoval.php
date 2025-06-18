@@ -20,6 +20,7 @@ class BookRemoval extends Model
         'reason',
         'observation',
         'user_id',
+        'user_name',
 
     ];
 
@@ -31,5 +32,14 @@ class BookRemoval extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+    protected static function booted()
+    {
+        static::creating(function ($removal) {
+            if (auth()->check()) {
+                $removal->user_id = auth()->id();
+                $removal->user_name = auth()->user()->name;
+            }
+        });
     }
 }

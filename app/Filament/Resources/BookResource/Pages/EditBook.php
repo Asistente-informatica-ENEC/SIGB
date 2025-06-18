@@ -44,7 +44,7 @@ class EditBook extends EditRecord
                     // Redirige al formulario de edición del libro duplicado
                     return redirect()->route('filament.admin.resources.books.edit', ['record' => $duplicatedBook->id]);
                 }),
-            Actions\DeleteAction::make(), // El botón de eliminar existente
+
         ];
     }
 

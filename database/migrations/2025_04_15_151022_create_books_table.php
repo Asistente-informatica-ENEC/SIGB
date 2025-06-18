@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('publishing_year');
             $table->string('edition');
             $table->string('inventory_number');
+            $table->string('pages');
             $table->string('physic_location');
             $table->text('themes');
             $table->timestamps();

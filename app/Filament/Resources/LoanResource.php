@@ -49,6 +49,7 @@ class LoanResource extends Resource
         return $form
             ->schema([
                 Hidden::make('user_id')->default(fn()=>Auth::id()),
+                Hidden::make('user_name')->default(fn () => Auth::user()?->name),
                 TextInput::make('requester')->label('Solicitante')
                 ->disabled(fn (string $context) => $context === 'edit')
                 ->required(),
@@ -172,7 +173,7 @@ class LoanResource extends Resource
                             ->sortable(),
                     ] : []),
                     
-                TextColumn::make('user.name')->label('Gestionado por')->searchable()->sortable(),
+                TextColumn::make('user_name')->label('Gestionado por')->searchable()->sortable(),
             ])
             ->defaultSort('loan_date', 'desc')
             ->filters([

@@ -52,7 +52,6 @@ class BookRemovalResource extends Resource
                 ->label('Libro')
                 ->relationship('book', 'title', fn ($query) => $query->whereIn('status', ['disponible', 'prestado']))
                 ->searchable()
-                ->sortable()
                 ->preload()
                 ->required()
                 ->reactive()
@@ -125,6 +124,9 @@ class BookRemovalResource extends Resource
 
             Hidden::make('user_id')
                 ->default(auth()->id()),
+            Hidden::make('user_name')
+                ->default(fn () => auth()->user()->name),
+
 
             Hidden::make('removed_at')
                 ->default(now()),
@@ -143,7 +145,7 @@ class BookRemovalResource extends Resource
                 TextColumn::make('book.title')->label('Libro')->searchable(),
                 TextColumn::make('book.book_code')->label('Código de recurso')->searchable(),
                 BadgeColumn::make('reason')->label('Motivo')->searchable(),
-                TextColumn::make('user.name')->label('Responsable')->searchable(),
+                TextColumn::make('user_name')->label('Gestionado por')->searchable(),
                 TextColumn::make('observation')->label('Observaciones')->wrap(),
                 
             ])
