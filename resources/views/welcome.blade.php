@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Bienvenido</title>
+    <title>Biblioteca ENEC - Bienvenido</title>
     <link rel="icon" href="{{ asset('images/icono.ico') }}" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -22,10 +22,15 @@
             <!-- Subtítulo -->
             <h2 class="text-2xl font-semibold mb-4 text-gray-700">Bienvenido a Biblioteca</h2>
 
-            <!-- Botón -->
-            <a href="{{ url('/admin') }}" class="inline-block mt-4 px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-                Gestion Bibliotecaria
-            </a>
+            <!-- Botones -->
+            <div class="flex justify-center gap-4 mt-4">
+                <a href="{{ url('/admin') }}" class="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                    Gestion Bibliotecaria
+                </a>
+                <a href="{{ url('/search') }}" class="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 transition">
+                    Recursos Virtuales
+                </a>
+            </div>
         </div>
     </main>
 

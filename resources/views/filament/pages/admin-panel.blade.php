@@ -1,5 +1,5 @@
 <x-filament::page>
-    <div class="flex flex-wrap gap-4">
+    <div class="flex flex-wrap gap-4 mb-6">
         <x-filament::button 
             tag="a" 
             href="{{ url('/admin/change-password') }}"

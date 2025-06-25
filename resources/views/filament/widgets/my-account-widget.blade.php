@@ -17,7 +17,7 @@
                         </span>
                     </h2>
                     <p class="text-sm text-gray-500 dark:text-gray-400">
-                        {{ auth()->user()->email }}
+                        {{ auth()->user()->getRoleNames()->join(', ') }}
                     </p>
                 </div>
             </div>
