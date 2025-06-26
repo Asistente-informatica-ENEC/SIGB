@@ -8,6 +8,8 @@ Este proyecto es una herramienta desarrollada con Laravel y Filament que permite
 
 Está diseñado para facilitar la administración de libros y mejorar el acceso a recursos por parte de bibliotecarios y usuarios.
 
+En paralelo, cuenta con un sistema de busqueda de recursos bibliotecarios utilizando las librerias "Project Gutenberg" y "PubMed", potenciado con el modelo de máquina de traducción "LibreTranslate" a modo centralizar los recursos de la biblioteca de "Project Gutenberg" y los estudios mas recientes pubilicados a traves de "PubMed" con el objetivo de simplificar el acceso a la información y reducir las barreras idiomaticas que pueda llegar a experimentar el usuario en su formación.
+
 
 
 
