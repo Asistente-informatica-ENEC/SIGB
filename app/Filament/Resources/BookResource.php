@@ -138,7 +138,7 @@ class BookResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('title')->label('Título')->limit(50)
+                TextColumn::make('title')->label('Título')->limit(42)
                 ->tooltip(fn ($record) => $record->title)
                 ->searchable()->sortable(),
                 TextColumn::make('authors')
