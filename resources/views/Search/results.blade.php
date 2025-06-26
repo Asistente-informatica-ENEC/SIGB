@@ -6,9 +6,12 @@
     <link rel="icon" href="{{ asset('images/icono.ico') }}" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-6">
+<body class="bg-sky-200 p-6">
     <div class="max-w-4xl mx-auto bg-white shadow rounded p-6">
         <h1 class="text-2xl font-bold mb-4">Resultados para: "{{ $query }}"</h1>
+        <a href="{{ url('/search') }}" class="mt-6 inline-block text-blue-600 hover:underline">
+            ← Regresar a búsqueda
+        </a>
 
         {{-- Project Gutenberg Results --}}
         <h2 class="text-xl font-semibold mt-6 mb-4">Project Gutenberg</h2>
@@ -47,28 +50,60 @@
 
         {{-- PubMed Results --}}
         <h2 class="text-xl font-semibold mt-6 mb-2">PubMed (NIH)</h2>
-        <ul class="list-disc list-inside space-y-2">
-            @forelse($pubmedResults as $pubmed)
-                <li class="mb-2">
-                    <a
-                        href="{{ route('public-search.ver', ['fuente' => 'pubmed', 'id' => $pubmed['id']]) }}"
-                        class="text-blue-600 hover:underline font-semibold"
-                        target="_blank"
-                    >
-                        {{ $pubmed['titulo_traducido'] ?? $pubmed['titulo'] }}
-                    </a>
-                </li>
-            @empty
-                <li class="text-gray-500">No se encontraron resultados en PubMed.</li>
-            @endforelse
-        </ul>
+        @forelse($pubmedResults as $pubmed)
+            <div class="mb-4 p-4 border rounded bg-gray-50">
+                <a
+                    href="{{ route('public-search.ver', ['fuente' => 'pubmed', 'id' => $pubmed['id']]) }}"
+                    class="text-blue-700 text-lg font-semibold hover:underline"
+                    target="_blank"
+                >
+                    {{ $pubmed['titulo_traducido'] ?? $pubmed['titulo'] }}
+                </a>
+            </div>
+        @empty
+            <p class="text-gray-500">No se encontraron resultados en PubMed.</p>
+        @endforelse
 
         <a href="{{ url('/search') }}" class="mt-6 inline-block text-blue-600 hover:underline">
             ← Regresar a búsqueda
         </a>
     </div>
 
+    <!-- Footer profesional -->
+    <footer class="bg-white border-t border-gray-200 py-6 mt-8">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="text-center">
+                <div class="flex items-center justify-center space-x-6 mb-3">
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-sm font-medium text-gray-700">Project Gutenberg</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-sm font-medium text-gray-700">PubMed</span>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm">
+                    Proyecto desarrollado por la <strong class="text-gray-800">Escuela Nacional de Enfermería de Cobán e INDAPSV</strong>
+                </p>
+                <p class="text-gray-500 text-xs mt-2">
+                     2025 - Biblioteca Virtual ENEC
+                </p>
+            </div>
+        </div>
+    </footer>
+
     <script>
+        // Ocultar el loader si existe (cuando se navega desde la búsqueda)
+        const loader = document.getElementById('loader');
+        if (loader) {
+            loader.classList.add('hidden');
+        }
+
         const form = document.querySelector('form');
         if (form) {
             form.addEventListener('submit', () => {

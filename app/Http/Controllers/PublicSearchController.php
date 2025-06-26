@@ -9,6 +9,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Log;
+use GuzzleHttp\Promise;
+use GuzzleHttp\Client;
 
 class PublicSearchController extends Controller
 {
@@ -23,18 +25,40 @@ class PublicSearchController extends Controller
         $lang = $request->input('lang', 'es'); // idioma destino, por defecto español
 
         // Traducción del término original (español) a varios idiomas para Gutenberg
-        $idiomas = ['en', 'de', 'fr', 'ru', 'pt'];
+        $idiomas = ['en', 'de', 'fr'];
         $traducciones = [];
 
+        // Traducción en paralelo usando Guzzle Promises y cacheo por término+idioma
+        $client = new Client();
+        $promises = [];
         foreach ($idiomas as $idioma) {
-            $response = Http::timeout(20)->post('http://localhost:5001/translate', [
-                'q' => $query,
-                'source' => 'es',
-                'target' => $idioma,
-                'format' => 'text',
-            ]);
-
-            $traducciones[$idioma] = $response->json()['translatedText'] ?? null;
+            $cacheKey = 'traduccion_' . md5($query . '_' . $idioma);
+            $traduccionCache = Cache::get($cacheKey);
+            if ($traduccionCache !== null) {
+                $traducciones[$idioma] = $traduccionCache;
+            } else {
+                $promises[$idioma] = $client->postAsync('http://localhost:5001/translate', [
+                    'form_params' => [
+                        'q' => $query,
+                        'source' => 'es',
+                        'target' => $idioma,
+                        'format' => 'text',
+                    ],
+                    'timeout' => 20,
+                ]);
+            }
+        }
+        if (!empty($promises)) {
+            $responses = Promise\Utils::settle($promises)->wait();
+            foreach ($responses as $idioma => $response) {
+                if ($response['state'] === 'fulfilled') {
+                    $body = json_decode($response['value']->getBody(), true);
+                    $traducciones[$idioma] = $body['translatedText'] ?? null;
+                    Cache::put('traduccion_' . md5($query . '_' . $idioma), $traducciones[$idioma], 3600);
+                } else {
+                    $traducciones[$idioma] = null;
+                }
+            }
         }
 
         // Construir array de términos para buscar en Gutenberg (es + traducciones)
@@ -43,15 +67,17 @@ class PublicSearchController extends Controller
         // Buscar en Project Gutenberg usando todos los términos
         $gutenberg = [];
         foreach ($terminos as $termino) {
-            try {
-                $result = Http::timeout(40)->get("https://gutendex.com/books", [
-                    'search' => $termino,
-                ])->json()['results'] ?? [];
-            } catch (\Exception $e) {
-                $result = [];
-                // Opcional: puedes guardar el error en el log
-                Log::error('Error consultando Gutendex: ' . $e->getMessage());
-            }
+            $cacheKey = 'gutenberg_' . md5($termino);
+            $result = Cache::remember($cacheKey, 3600, function() use ($termino) {
+                try {
+                    return Http::timeout(40)->get("https://gutendex.com/books", [
+                        'search' => $termino,
+                    ])->json()['results'] ?? [];
+                } catch (\Exception $e) {
+                    Log::error('Error consultando Gutendex: ' . $e->getMessage());
+                    return [];
+                }
+            });
 
             foreach ($result as $libro) {
                 $formats = $libro['formats'] ?? [];
@@ -100,19 +126,21 @@ class PublicSearchController extends Controller
         $paginated->setCollection(collect($items));
 
         // Traducir término original a inglés para usar en PubMed
-        $traducidoIngles = Http::timeout(20)->post('http://localhost:5001/translate', [
-            'q' => $query,
-            'source' => 'es',
-            'target' => 'en',
-            'format' => 'text',
-        ])->json()['translatedText'] ?? $query;
+        $pubmedCacheKey = 'pubmed_' . md5($query);
+        $pubmedResponse = Cache::remember($pubmedCacheKey, 3600, function() use ($query) {
+            $traducidoIngles = Http::timeout(20)->post('http://localhost:5001/translate', [
+                'q' => $query,
+                'source' => 'es',
+                'target' => 'en',
+                'format' => 'text',
+            ])->json()['translatedText'] ?? $query;
 
-        // Buscar en PubMed usando el término traducido
-        $pubmedResponse = Http::timeout(20)->get("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi", [
-            'db' => 'pubmed',
-            'term' => $traducidoIngles,
-            'retmode' => 'json'
-        ])->json();
+            return Http::timeout(20)->get("https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi", [
+                'db' => 'pubmed',
+                'term' => $traducidoIngles,
+                'retmode' => 'json'
+            ])->json();
+        });
 
         $pubmedIds = $pubmedResponse['esearchresult']['idlist'] ?? [];
         $pubmedResults = [];
@@ -177,6 +205,19 @@ class PublicSearchController extends Controller
         $contenido = '';
 
         if ($fuente === 'gutenberg') {
+            // Obtener metadatos del libro desde Gutendex
+            $bookResponse = Http::timeout(20)->get("https://gutendex.com/books/{$id}");
+            $bookData = $bookResponse->json();
+            
+            $titulo = $bookData['title'] ?? '';
+            $titulo_traducido = $this->traducirChunk($titulo, 'es');
+            $autores = array_column($bookData['authors'] ?? [], 'name');
+            $year = $bookData['authors'][0]['birth_year'] ?? ''; // Año aproximado del autor
+            $temas = $bookData['subjects'] ?? [];
+            $idioma = $bookData['languages'][0] ?? '';
+            $descargas = $bookData['download_count'] ?? 0;
+            
+            // Obtener el contenido del texto
             $url_texto = $request->query('url_texto');
             if ($url_texto) {
                 $url_texto = urldecode($url_texto);
@@ -185,6 +226,8 @@ class PublicSearchController extends Controller
                     $contenido = $response->body();
                 }
             }
+            
+            return view('search.view', compact('contenido', 'titulo', 'titulo_traducido', 'autores', 'year', 'temas', 'idioma', 'descargas'));
         }
 
         if ($fuente === 'pubmed') {

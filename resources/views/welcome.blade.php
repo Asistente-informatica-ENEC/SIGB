@@ -6,7 +6,7 @@
     <link rel="icon" href="{{ asset('images/icono.ico') }}" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen bg-sky-200 flex flex-col items-center">
+<body class="min-h-screen bg-sky-200 flex flex-col items-center" style="background-image: url('{{ asset('images/fondo.jpeg') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
 
     <!-- Título superior -->
     <header class="w-full py-6 ">

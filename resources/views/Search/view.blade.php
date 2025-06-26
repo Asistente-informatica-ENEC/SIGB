@@ -6,91 +6,93 @@
     <link rel="icon" href="{{ asset('images/icono.ico') }}" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-300 p-6 flex justify-center items-center min-h-screen">
+<body class="bg-sky-200 min-h-screen flex flex-col">
+    <div class="flex-grow flex justify-center items-center p-6">
+        <div class="bg-white shadow-lg rounded-lg max-w-5xl w-full max-h-[80vh] overflow-y-auto p-6 font-serif text-gray-900 leading-relaxed text-base">
+            <h1 class="text-3xl font-bold mb-6 border-b pb-3">
+                {{ isset($titulo) && $titulo ? $titulo : 'Contenido del recurso' }}
+            </h1>
 
-@php
-    $autores = $autores ?? null;
-    $journal = $journal ?? null;
-    $year = $year ?? null;
-@endphp
-
-    <div class="bg-white shadow-lg rounded-lg max-w-5xl w-full max-h-[80vh] overflow-y-auto p-6 font-serif text-gray-900 leading-relaxed text-base">
-        <h1 class="text-3xl font-bold mb-6 border-b pb-3">
-            {{ isset($titulo) && $titulo ? $titulo : 'Contenido del recurso' }}
-        </h1>
-
-        {{-- Metadatos del artículo PubMed --}}
-        @if(isset($titulo_traducido) || isset($doi) || isset($autores) || isset($year) || isset($institucion))
-            <div class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                <ul class="text-base text-gray-800 space-y-1">
-                    @if(!empty($titulo_traducido))
-                        <li><span class="font-semibold">Título (español):</span> {{ $titulo_traducido }}</li>
-                    @endif
-                    @if(!empty($doi))
-                        <li><span class="font-semibold">DOI:</span> <a href="https://doi.org/{{ $doi }}" class="text-blue-700 underline" target="_blank">{{ $doi }}</a></li>
-                    @endif
-                    @if(!empty($autores))
-                        <li><span class="font-semibold">Autor(es):</span> {{ is_array($autores) ? implode(', ', $autores) : $autores }}</li>
-                    @endif
-                    @if(!empty($year))
-                        <li><span class="font-semibold">Año de publicación:</span> {{ $year }}</li>
-                    @endif
-                    @if(!empty($institucion))
-                        <li><span class="font-semibold">Institución:</span> {{ $institucion }}</li>
-                    @endif
-                </ul>
-            </div>
-        @endif
-
-        {{-- Controles de traducción --}}
-        <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-blue-800">Opciones de traducción</h3>
-                <div class="flex space-x-2">
-                    <button id="btn-traducir-todo" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
-                        Traducir
-                    </button>
-                    <button id="btn-reset" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
-                        Mostrar original
-                    </button>
-                </div>
-            </div>
-            
-            {{-- Barra de progreso (oculta por defecto) --}}
-            <div id="progress-container" class="hidden">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-medium text-gray-700">Traduciendo...</span>
-                    <span id="progress-text" class="text-sm font-medium text-gray-700">0%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
-                </div>
-                <p id="progress-message" class="text-sm text-gray-600 mt-2">Iniciando traducción...</p>
-            </div>
-        </div>
-
-        {{-- Contenido del texto --}}
-        <div id="content-container">
-            @if(!empty($contenido))
-                <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                        </svg>
-                        <span class="text-green-800 font-medium">Contenido cargado correctamente</span>
-                    </div>
-                </div>
-                <div id="texto-original" class="whitespace-pre-wrap break-words">{{ $contenido }}</div>
-                <div id="texto-traducido" class="whitespace-pre-wrap break-words hidden"></div>
-            @else
-                <div class="text-center py-8">
-                    <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    <p class="text-gray-500 text-lg">No se pudo cargar el contenido del recurso.</p>
-                    <a href="javascript:history.back()" class="mt-4 inline-block text-blue-600 hover:underline">← Volver a los resultados</a>
+            {{-- Metadatos del artículo PubMed y Project Gutenberg --}}
+            @if(isset($titulo_traducido) || isset($doi) || isset($autores) || isset($year) || isset($institucion) || isset($temas) || isset($idioma))
+                <div class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <ul class="text-base text-gray-800 space-y-1">
+                        @if(!empty($titulo_traducido))
+                            <li><span class="font-semibold">Título (español):</span> {{ $titulo_traducido }}</li>
+                        @endif
+                        @if(!empty($doi))
+                            <li><span class="font-semibold">DOI:</span> <a href="https://doi.org/{{ $doi }}" class="text-blue-700 underline" target="_blank">{{ $doi }}</a></li>
+                        @endif
+                        @if(!empty($autores))
+                            <li><span class="font-semibold">Autor(es):</span> {{ is_array($autores) ? implode(', ', $autores) : $autores }}</li>
+                        @endif
+                        @if(!empty($year))
+                            <li><span class="font-semibold">Año de publicación:</span> {{ $year }}</li>
+                        @endif
+                        @if(!empty($institucion))
+                            <li><span class="font-semibold">Institución:</span> {{ $institucion }}</li>
+                        @endif
+                        {{-- Metadatos específicos de Project Gutenberg --}}
+                        @if(!empty($temas))
+                            <li><span class="font-semibold">Temas:</span> {{ is_array($temas) ? implode(', ', $temas) : $temas }}</li>
+                        @endif
+                        @if(!empty($idioma))
+                            <li><span class="font-semibold">Idioma:</span> {{ strtoupper($idioma) }}</li>
+                        @endif
+                    </ul>
                 </div>
             @endif
+
+            {{-- Controles de traducción --}}
+            <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-blue-800">Opciones de traducción</h3>
+                    <div class="flex space-x-2">
+                        <button id="btn-traducir-todo" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                            Traducir
+                        </button>
+                        <button id="btn-reset" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+                            Mostrar original
+                        </button>
+                    </div>
+                </div>
+                
+                {{-- Barra de progreso (oculta por defecto) --}}
+                <div id="progress-container" class="hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">Traduciendo...</span>
+                        <span id="progress-text" class="text-sm font-medium text-gray-700">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <p id="progress-message" class="text-sm text-gray-600 mt-2">Iniciando traducción...</p>
+                </div>
+            </div>
+
+            {{-- Contenido del texto --}}
+            <div id="content-container">
+                @if(!empty($contenido))
+                    <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="text-green-800 font-medium">Contenido cargado correctamente</span>
+                        </div>
+                    </div>
+                    <div id="texto-original" class="whitespace-pre-wrap break-words text-justify shadow">{{ $contenido }}</div>
+                    <div id="texto-traducido" class="whitespace-pre-wrap break-words hidden text-justify shadow">{{ $contenido }}</div>
+                @else
+                    <div class="text-center py-8">
+                        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p class="text-gray-500 text-lg">No se pudo cargar el contenido del recurso.</p>
+                        <a href="javascript:history.back()" class="mt-4 inline-block text-blue-600 hover:underline">← Volver a los resultados</a>
+                    </div>
+                @endif
+            </div>
         </div>
     </div>
 
@@ -373,6 +375,8 @@
             }
         });
     </script>
+
+
 
 </body>
 </html>

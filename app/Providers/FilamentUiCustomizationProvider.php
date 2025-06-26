@@ -13,6 +13,11 @@ class FilamentUiCustomizationProvider extends ServiceProvider
             'auth.login.form.before',
             fn () => view('auth.custom-login-image'),
         );
+
+        Filament::registerRenderHook(
+            'head.end',
+            fn () => '<style>body { background-color: #bae6fd !important; }</style>',
+        );
     }
 }
 
