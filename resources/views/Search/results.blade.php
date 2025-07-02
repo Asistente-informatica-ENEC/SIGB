@@ -15,6 +15,11 @@
 
         {{-- Project Gutenberg Results --}}
         <h2 class="text-xl font-semibold mt-6 mb-4">Project Gutenberg</h2>
+        @if($gutenberg->count() === 0)
+            <div class="mb-4 p-4 border rounded bg-red-50 text-red-700">
+                No se pudo obtener resultados de Project Gutenberg en este momento. Intente más tarde.
+            </div>
+        @endif
         @forelse($gutenberg as $book)
             <div class="mb-4 p-4 border rounded bg-gray-50">
                 <a
@@ -44,12 +49,47 @@
         @endforelse
 
         {{-- Paginación --}}
-        <div class="mt-6">
-            {{ $gutenberg->links() }}
-        </div>
+        @if($gutenberg->hasPages())
+            <div class="mt-6">
+                {{ $gutenberg->appends(['page' => null])->links() }}
+            </div>
+        @endif
+
+        {{-- PMC Results --}}
+        <h2 class="text-xl font-semibold mt-6 mb-2">PubMed Central (PMC)</h2>
+        @if($pmcResults->count() === 0)
+            <div class="mb-4 p-4 border rounded bg-red-50 text-red-700">
+                No se pudo obtener resultados de PubMed Central en este momento. Intente más tarde.
+            </div>
+        @endif
+        @forelse($pmcResults as $pmc)
+            <div class="mb-4 p-4 border rounded bg-gray-50">
+                <a
+                    href="{{ route('public-search.ver', ['fuente' => 'pmc', 'id' => $pmc['id']]) }}"
+                    class="text-blue-700 text-lg font-semibold hover:underline"
+                    target="_blank"
+                >
+                    {{ $pmc['titulo_traducido'] ?? $pmc['titulo'] }}
+                </a>
+            </div>
+        @empty
+            <p class="text-gray-500">No se encontraron resultados en PubMed Central.</p>
+        @endforelse
+
+        {{-- Paginación PMC --}}
+        @if($pmcResults->hasPages())
+            <div class="mt-6">
+                {{ $pmcResults->appends(['pmc_page' => null])->links() }}
+            </div>
+        @endif
 
         {{-- PubMed Results --}}
         <h2 class="text-xl font-semibold mt-6 mb-2">PubMed (NIH)</h2>
+        @if($pubmedResults->count() === 0)
+            <div class="mb-4 p-4 border rounded bg-red-50 text-red-700">
+                No se pudo obtener resultados de PubMed en este momento. Intente más tarde.
+            </div>
+        @endif
         @forelse($pubmedResults as $pubmed)
             <div class="mb-4 p-4 border rounded bg-gray-50">
                 <a
@@ -63,6 +103,13 @@
         @empty
             <p class="text-gray-500">No se encontraron resultados en PubMed.</p>
         @endforelse
+
+        {{-- Paginación PubMed --}}
+        @if($pubmedResults->hasPages())
+            <div class="mt-6">
+                {{ $pubmedResults->appends(['pubmed_page' => null])->links() }}
+            </div>
+        @endif
 
         <a href="{{ url('/search') }}" class="mt-6 inline-block text-blue-600 hover:underline">
             ← Regresar a búsqueda
@@ -79,6 +126,12 @@
                             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                         <span class="text-sm font-medium text-gray-700">Project Gutenberg</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-sm font-medium text-gray-700">PMC (PubMed Central)</span>
                     </div>
                     <div class="flex items-center space-x-2">
                         <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">

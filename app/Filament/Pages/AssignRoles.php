@@ -12,6 +12,7 @@ use Spatie\Permission\Models\Role;
 class AssignRoles extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    protected static ?string $title = 'Asignar Rol';
     protected static string $view = 'filament.pages.assign-roles';
 
     public array $data = [];

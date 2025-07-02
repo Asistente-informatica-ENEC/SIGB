@@ -10,7 +10,9 @@
 
     <!-- Título superior -->
     <header class="w-full py-6 ">
-        <h1 class="text-center text-4xl font-bold text-gray-800">Escuela Nacional de Enfermería de Cobán e INDAPSV</h1>
+    <h1 class="text-center text-4xl font-bold text-gray-800 drop-shadow-[0_2px_2px_rgba(255,255,255,1)]" style="text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff;">
+        Escuela Nacional de Enfermería de Cobán e INDAPSV
+    </h1>
     </header>
 
     <!-- Contenido centrado -->
