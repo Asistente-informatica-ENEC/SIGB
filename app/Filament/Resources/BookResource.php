@@ -107,7 +107,8 @@ class BookResource extends Resource
                                         ]),
                                     TextInput::make('location')->label('Localización')->required(),
                                 ]) 
-                ->searchable()                               
+                ->searchable()
+                ->preload()
                 ->required(),
                 TextInput::make('publishing_year')->label('Año de publicación')->required()->maxLength(255),
                 TextInput::make('edition')->label('Edición')->required()->maxLength(255),
