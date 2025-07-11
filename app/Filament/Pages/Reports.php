@@ -25,6 +25,7 @@ class Reports extends Page
     public string $bookStatus = '';
     public ?string $startDate = null;
     public ?string $endDate = null;
+    public ?string $requester = null;
     public Collection $results;
 
     public function mount(): void
@@ -35,10 +36,20 @@ class Reports extends Page
     public function generateReport()
     {
         $this->results = match ($this->reportType) {
-            'loans_by_period' => Loan::with(['book', 'user'])
-                ->whereBetween('loan_date', [$this->startDate, $this->endDate])
-                ->get()
-                ->map(function ($loan) {
+            'loans_by_period' => (function () {
+                $query = Loan::with(['book', 'user']);
+
+                // Filtro por fechas si están definidas
+                if (!empty($this->startDate) && !empty($this->endDate)) {
+                    $query->whereBetween('loan_date', [$this->startDate, $this->endDate]);
+                }
+
+                // Filtro por solicitante si está definido
+                if (!empty($this->requester)) {
+                    $query->where('requester', 'like', '%' . $this->requester . '%');
+                }
+
+                return $query->get()->map(function ($loan) {
                     return [
                         'Título del Libro' => $loan->book->title ?? 'N/A',
                         'Código' => $loan->book->book_code ?? 'N/A',
@@ -48,7 +59,8 @@ class Reports extends Page
                         'Fecha de Registro' => \Carbon\Carbon::parse($loan->created_at)->format('d/m/Y H:i'),
                         'Bibliotecario' => $loan->user->name ?? 'N/A',
                     ];
-                }),
+                });
+            })(),
 
             'most_borrowed_books' => LoanHistory::selectRaw('book_id, COUNT(*) as total')
                 ->groupBy('book_id')
@@ -77,9 +89,15 @@ class Reports extends Page
                     ];
                 }),
 
-            'active_loans' => Loan::with(['book', 'user'])
-                ->get()
-                ->map(function ($loan) {
+            'active_loans' => (function () {
+                $query = Loan::with(['book', 'user']);
+
+                // Filtro por solicitante si está definido
+                if (!empty($this->requester)) {
+                    $query->where('requester', 'like', '%' . $this->requester . '%');
+                }
+
+                return $query->get()->map(function ($loan) {
                     return [
                         'Título del Libro' => $loan->book->title ?? 'N/A',
                         'Código' => $loan->book->book_code ?? 'N/A',
@@ -88,12 +106,23 @@ class Reports extends Page
                         'Fecha para Devolución' => \Carbon\Carbon::parse($loan->return_date)->format('d/m/Y'),
                         'Bibliotecario' => $loan->user->name ?? 'N/A',
                     ];
-                }),
+                });
+            })(),
 
-            'loan_history' => LoanHistory::with(['book', 'user'])
-                ->whereBetween('loan_date', [$this->startDate, $this->endDate])
-                ->get()
-                ->map(function ($loanHistory) {
+            'loan_history' => (function () {
+                $query = LoanHistory::with(['book', 'user']);
+
+                // Filtro por fechas si están definidas
+                if (!empty($this->startDate) && !empty($this->endDate)) {
+                    $query->whereBetween('loan_date', [$this->startDate, $this->endDate]);
+                }
+
+                // Filtro por solicitante si está definido
+                if (!empty($this->requester)) {
+                    $query->where('requester', 'like', '%' . $this->requester . '%');
+                }
+
+                return $query->get()->map(function ($loanHistory) {
                     return [
                         'Título del Libro' => $loanHistory->book->title ?? 'Desconocido',
                         'Solicitante' => $loanHistory->requester,
@@ -103,7 +132,8 @@ class Reports extends Page
                         'Fecha de Devolución' => \Carbon\Carbon::parse($loanHistory->updated_at)->format('d/m/Y H:i'),
                         'Gestionado por' => $loanHistory->user->name ?? 'Desconocido',
                     ];
-                }),
+                });
+            })(),
 
             'book_inventory' => Book::with(['authors', 'PublishingHouse'])
                 ->get()

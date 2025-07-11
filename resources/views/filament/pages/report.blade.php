@@ -53,6 +53,14 @@
                         </div>
                     @endif
 
+                    @if(in_array($reportType, ['loan_history', 'loans_by_period', 'active_loans']))
+                        <div>
+                            <label class="block font-medium text-gray-700 dark:text-gray-200">Solicitante</label>
+                            <input type="text" wire:model="requester" placeholder="Buscar por nombre del solicitante..."
+                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:ring-primary-500 focus:border-primary-500" />
+                        </div>
+                    @endif
+
                 </div>
 
                 <div class="text-right">

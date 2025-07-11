@@ -30,7 +30,7 @@
             </tr>
             <tr>
                 <th>Recurso Bibliográfico:</th>
-                <td colspan="3">{{ $loan->book->title }} — # Inv.: {{ $loan->book->inventory_number }}</td>
+                <td colspan="3">{{ $loan->book->title }} — # Reg.: {{ $loan->book->inventory_number }}</td>
             </tr>
             <tr>
                 <th colspan="4">Procedencia Académica:</th>

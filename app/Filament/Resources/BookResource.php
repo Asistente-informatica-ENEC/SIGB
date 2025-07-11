@@ -170,7 +170,7 @@ class BookResource extends Resource
                 ->tooltip(fn ($record) => $record->publishingHouse?->name)
                 ->searchable()->sortable(),
                 TextColumn::make('publishing_year')->label('Año')->searchable()->sortable(),
-                TextColumn::make('inventory_number')->label('No. Inventario')->searchable()->sortable(),
+                TextColumn::make('inventory_number')->label('No. Registro')->searchable()->sortable(),
                 BadgeColumn::make('status')->label('Estado')->formatStateUsing(fn (string $state): string => match ($state) {
                     'disponible' => 'Disponible',
                     'prestado' => 'Prestado',

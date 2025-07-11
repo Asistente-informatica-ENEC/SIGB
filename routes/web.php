@@ -27,7 +27,7 @@ Route::get('/admin-redirect', function () {
 });
 
 // Rutas públicas para consulta de libros
-Route::get('/search', [PublicSearchController::class, 'buscar']);
-Route::get('/search/results', [PublicSearchController::class, 'resultados']);
+Route::get('/search', [PublicSearchController::class, 'buscar'])->name('search.buscar');
+Route::get('/search/results', [PublicSearchController::class, 'resultados'])->name('search.resultados');
 Route::get('/public-search/ver/{fuente}/{id}', [PublicSearchController::class, 'ver'])->name('public-search.ver');
 Route::post('/public-search/traducir', [PublicSearchController::class, 'traducirAjax'])->name('public-search.traducir');

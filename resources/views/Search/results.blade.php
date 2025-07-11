@@ -50,8 +50,9 @@
 
         {{-- Paginación --}}
         @if($gutenberg->hasPages())
-            <div class="mt-6">
-                {{ $gutenberg->appends(['page' => null])->links() }}
+            <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p class="text-sm text-blue-700 mb-2 font-medium">Navegación de Project Gutenberg</p>
+                {{ $gutenberg->links('vendor.pagination.custom') }}
             </div>
         @endif
 
@@ -78,8 +79,8 @@
 
         {{-- Paginación PMC --}}
         @if($pmcResults->hasPages())
-            <div class="mt-6">
-                {{ $pmcResults->appends(['pmc_page' => null])->links() }}
+            <div class="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+                {{ $pmcResults->links('vendor.pagination.custom') }}
             </div>
         @endif
 
@@ -106,8 +107,9 @@
 
         {{-- Paginación PubMed --}}
         @if($pubmedResults->hasPages())
-            <div class="mt-6">
-                {{ $pubmedResults->appends(['pubmed_page' => null])->links() }}
+            <div class="mt-6 p-4 bg-purple-50 rounded-lg border border-purple-200"> 
+                
+                {{ $pubmedResults->links('vendor.pagination.custom') }}
             </div>
         @endif
 
